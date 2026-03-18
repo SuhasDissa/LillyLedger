@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get install -y cmake build-essential
+
+      - name: Configure
+        run: cmake -S tests -B tests/build
+
+      - name: Build
+        run: cmake --build tests/build
+
+      - name: Run tests
+        run: ctest --test-dir tests/build --output-on-failure
