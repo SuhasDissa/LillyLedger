@@ -17,3 +17,15 @@ make
 # delete build files using
 make clean
 ```
+
+## Running Tests
+
+```bash
+cd tests && mkdir build && cd build
+
+cmake ..
+
+make
+
+ctest
+```
