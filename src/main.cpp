@@ -1,16 +1,38 @@
 #include <iostream>
-#include "core/order.h"
+#include "io/csvreader.h"
+#include "io/csvwriter.h"
+#include "engine/orderrouter.h"
 
-using namespace std;
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        std::cerr << "Usage: lillyledger <input.csv> <output.csv>\n";
+        return 1;
+    }
 
-int main(){
-    Order testorder = {
-        "ord1",
-        10.5,
-        100,
-        Instrument::Rose,
-        Side::Buy
-    };
-    cout << "Client Order ID: " << testorder.clientOrderId << endl;
+    CSVReader reader(argv[1]);
+    auto parseResults = reader.readAll();
+
+    OrderRouter router;
+    std::vector<ExecutionReport> allReports;
+
+    for (const auto &result : parseResults) {
+        if (!result.ok) {
+            // Emit a rejected execution report for invalid orders.
+            ExecutionReport r{};
+            std::snprintf(r.clientOrderId, sizeof(r.clientOrderId), "%s",
+                          result.order.clientOrderId);
+            r.status = Status::Rejected;
+            std::snprintf(r.reason, sizeof(r.reason), "%s",
+                          result.reason.c_str());
+            allReports.push_back(r);
+        } else {
+            auto reports = router.route(result.order);
+            allReports.insert(allReports.end(), reports.begin(), reports.end());
+        }
+    }
+
+    CSVWriter writer(argv[2]);
+    writer.write(allReports);
+
     return 0;
 }
