@@ -1,16 +1,14 @@
-#ifndef ORDER_H
-#define ORDER_H
-
+#pragma once
 #include "core/enum/instrument.h"
 #include "core/enum/side.h"
 #include <cstdint>
 
-struct Order {
-    char clientOrderId[8]{};
-    double price;
-    uint16_t quantity;
-    Instrument instrument;
-    Side side;
-};
+inline constexpr std::size_t kClientOrderIdLen = 8;
 
-#endif // ORDER_H
+struct Order {
+    char       clientOrderId[kClientOrderIdLen]{};
+    double     price;
+    uint16_t   quantity;
+    Instrument instrument;
+    Side       side;
+};

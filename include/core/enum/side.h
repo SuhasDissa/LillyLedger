@@ -1,11 +1,7 @@
-#ifndef SIDE_H
-#define SIDE_H
-
+#pragma once
 #include <cstdint>
 
-enum class Side: uint8_t{
-    Buy = 1,
-    Sell = 2
+enum class Side : uint8_t {
+    Buy  = 1,
+    Sell = 2,
 };
-
-#endif // SIDE_H

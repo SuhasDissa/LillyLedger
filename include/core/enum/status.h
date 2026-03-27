@@ -1,13 +1,9 @@
-#ifndef STATUS_H
-#define STATUS_H
-
+#pragma once
 #include <cstdint>
 
-enum class Status: uint8_t {
-    New,
-    Rejected,
-    Fill,
-    PFill
+enum class Status : uint8_t {
+    New      = 0,
+    Rejected = 1,
+    Fill     = 2,
+    PFill    = 3,
 };
-
-#endif // STATUS_H

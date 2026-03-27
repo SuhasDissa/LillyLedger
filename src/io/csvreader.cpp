@@ -8,6 +8,12 @@
 #include <fstream>
 #include <iostream>
 
+static constexpr int kMaxClientOrderIdChars = 7;   // without null terminator
+static constexpr int kMinQuantity           = 10;
+static constexpr int kMaxQuantity           = 1000;
+static constexpr int kQuantityStep          = 10;
+static constexpr int kExpectedFieldCount    = 5;
+
 CSVReader::CSVReader(std::string filePath) : filePath_(std::move(filePath)) {}
 
 std::string CSVReader::trim(const std::string &text) {
@@ -43,7 +49,7 @@ CSVReader::splitCommaSeparated(const std::string &line) {
 bool CSVReader::isHeaderRow(const std::string &line) {
   std::vector<std::string> tokens = splitCommaSeparated(line);
 
-  if (tokens.size() != 5) {
+  if (static_cast<int>(tokens.size()) != kExpectedFieldCount) {
     return false;
   }
   return tokens[0] == "Client Order ID" && tokens[1] == "Instrument" &&
@@ -52,12 +58,8 @@ bool CSVReader::isHeaderRow(const std::string &line) {
 
 ParseResult CSVReader::buildOrder(const RawOrderRow &raw) {
   ParseResult result;
-  if (raw.clientOrderId.empty()) {
-    result.reason = "Invalid Client Order Id";
-    return result;
-  }
-
-  if (raw.clientOrderId.size() > 7) {
+  if (raw.clientOrderId.empty() ||
+      raw.clientOrderId.size() > static_cast<std::size_t>(kMaxClientOrderIdChars)) {
     result.reason = "Invalid Client Order Id";
     return result;
   }
@@ -120,7 +122,8 @@ ParseResult CSVReader::buildOrder(const RawOrderRow &raw) {
     return result;
   }
 
-  if (quantityValue < 10 || quantityValue > 1000 || quantityValue % 10 != 0) {
+  if (quantityValue < kMinQuantity || quantityValue > kMaxQuantity ||
+      quantityValue % kQuantityStep != 0) {
     result.reason = "Invalid quantity";
     return result;
   }
@@ -155,7 +158,7 @@ ParseResult CSVReader::buildOrder(const RawOrderRow &raw) {
 ParseResult CSVReader::parseRawRow(const std::string &line) {
   std::vector<std::string> tokens = splitCommaSeparated(line);
 
-  if (tokens.size() != 5) {
+  if (static_cast<int>(tokens.size()) != kExpectedFieldCount) {
     ParseResult result;
     result.reason = "Malformed row";
     return result;
