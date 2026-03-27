@@ -168,7 +168,15 @@ ParseResult CSVReader::parseRawRow(const std::string &line) {
   raw.quantity = tokens[3];
   raw.price = tokens[4];
 
-  return buildOrder(raw);
+  ParseResult result = buildOrder(raw);
+  // Always copy the raw client order ID so that rejected execution reports
+  // can include it.  buildOrder() only writes it on the success path.
+  if (!result.ok) {
+    std::snprintf(result.order.clientOrderId,
+                  sizeof(result.order.clientOrderId),
+                  "%.7s", raw.clientOrderId.c_str());
+  }
+  return result;
 }
 
 std::vector<ParseResult> CSVReader::readAll() const {
