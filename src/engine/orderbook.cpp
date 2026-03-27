@@ -1,41 +1,34 @@
 #include "engine/orderbook.h"
-#include "engine/matchingengine.h"
 #include "engine/executionhandler.h"
+#include "engine/matchingengine.h"
 #include <algorithm>
 #include <cstdio>
 
 OrderBook::OrderBook(Instrument instrument) : instrument_(instrument) {}
 
-// ─── sorted insertion ─────────────────────────────────────────────────────────
-
 void OrderBook::insertBuy(const BookEntry &entry) {
     // Descending price; ascending seqNum within the same price level (FIFO).
-    auto it = std::lower_bound(
-        buys_.begin(), buys_.end(), entry,
-        [](const BookEntry &a, const BookEntry &b) {
-            if (a.order.price != b.order.price)
-                return a.order.price > b.order.price;
-            return a.seqNum < b.seqNum;
-        });
+    auto it = std::lower_bound(buys_.begin(), buys_.end(), entry,
+                               [](const BookEntry &a, const BookEntry &b) {
+                                   if (a.order.price != b.order.price)
+                                       return a.order.price > b.order.price;
+                                   return a.seqNum < b.seqNum;
+                               });
     buys_.insert(it, entry);
 }
 
 void OrderBook::insertSell(const BookEntry &entry) {
     // Ascending price; ascending seqNum within the same price level (FIFO).
-    auto it = std::lower_bound(
-        sells_.begin(), sells_.end(), entry,
-        [](const BookEntry &a, const BookEntry &b) {
-            if (a.order.price != b.order.price)
-                return a.order.price < b.order.price;
-            return a.seqNum < b.seqNum;
-        });
+    auto it = std::lower_bound(sells_.begin(), sells_.end(), entry,
+                               [](const BookEntry &a, const BookEntry &b) {
+                                   if (a.order.price != b.order.price)
+                                       return a.order.price < b.order.price;
+                                   return a.seqNum < b.seqNum;
+                               });
     sells_.insert(it, entry);
 }
 
-// ─── addOrder ─────────────────────────────────────────────────────────────────
-
-std::vector<ExecutionReport> OrderBook::addOrder(const Order &order,
-                                                 const char  *orderId) {
+std::vector<ExecutionReport> OrderBook::addOrder(const Order &order, const char *orderId) {
     auto &opposite = (order.side == Side::Buy) ? sells_ : buys_;
 
     uint16_t remainingQty = order.quantity;
@@ -52,9 +45,9 @@ std::vector<ExecutionReport> OrderBook::addOrder(const Order &order,
     // ── Step 3: rest any unmatched remainder ──────────────────────────────────
     if (remainingQty > 0) {
         BookEntry entry{};
-        entry.order        = order;
+        entry.order = order;
         entry.remainingQty = remainingQty;
-        entry.seqNum       = nextSeqNum_++;
+        entry.seqNum = nextSeqNum_++;
         std::snprintf(entry.orderId, sizeof(entry.orderId), "%s", orderId);
 
         if (order.side == Side::Buy)

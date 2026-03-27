@@ -1,6 +1,6 @@
 #pragma once
-#include "core/order.h"
 #include "core/executionreport.h"
+#include "core/order.h"
 #include "engine/bookentry.h"
 #include "engine/matchingengine.h"
 #include <string>
@@ -19,7 +19,7 @@
 // filled at $10 — the buyer gets price improvement.  This is modelled by
 // storing execPrice = passive.order.price inside each Trade.
 class ExecutionHandler {
-public:
+  public:
     // Build one pair of execution reports (passive + aggressor) per Trade.
     //
     // Status determination
@@ -32,10 +32,9 @@ public:
     // The Trade snapshot captures passive.remainingQty *before* the match,
     // so the comparison is exact even when the same passive entry is partially
     // consumed across multiple aggressive orders.
-    static std::vector<ExecutionReport> buildFillReports(
-        const Order              &aggressor,
-        const char               *aggressorOrderId,
-        const std::vector<Trade> &trades);
+    static std::vector<ExecutionReport> buildFillReports(const Order &aggressor,
+                                                         const char *aggressorOrderId,
+                                                         const std::vector<Trade> &trades);
 
     // Build a New report for an order (or its remainder) that has been placed
     // on the book.  Price and quantity reflect what is actually resting.
@@ -44,6 +43,6 @@ public:
     // Build a Rejected report for an order that failed validation.
     // clientOrderId is copied from ParseResult.order.clientOrderId (best-effort
     // truncation of the raw input value is done by CSVReader).
-    static ExecutionReport buildRejectedReport(const char        *clientOrderId,
+    static ExecutionReport buildRejectedReport(const char *clientOrderId,
                                                const std::string &reason);
 };

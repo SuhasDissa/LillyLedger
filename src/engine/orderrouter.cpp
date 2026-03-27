@@ -3,10 +3,8 @@
 
 OrderRouter::OrderRouter()
     : books_{
-          OrderBook{Instrument::Rose},
-          OrderBook{Instrument::Lavender},
-          OrderBook{Instrument::Lotus},
-          OrderBook{Instrument::Tulip},
+          OrderBook{Instrument::Rose},   OrderBook{Instrument::Lavender},
+          OrderBook{Instrument::Lotus},  OrderBook{Instrument::Tulip},
           OrderBook{Instrument::Orchid},
       } {}
 
