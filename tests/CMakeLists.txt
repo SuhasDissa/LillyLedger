@@ -21,7 +21,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 include(GoogleTest)
 
-file(GLOB_RECURSE TEST_SOURCES unit/*.cpp)
+file(GLOB_RECURSE TEST_SOURCES unit/*.cpp integration/*.cpp)
 foreach(TEST_SOURCE ${TEST_SOURCES})
     get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
     add_executable(${TEST_NAME} ${TEST_SOURCE} ${PARENT_SOURCES})
