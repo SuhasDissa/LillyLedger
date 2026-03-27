@@ -1,8 +1,9 @@
-#include <iostream>
+#include "engine/executionhandler.h"
+#include "engine/orderrouter.h"
 #include "io/csvreader.h"
 #include "io/csvwriter.h"
-#include "engine/orderrouter.h"
-#include "engine/executionhandler.h"
+#include <chrono>
+#include <iostream>
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
@@ -10,9 +11,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // ── Parse ────────────────────────────────────────────────────────────────
+    auto t0 = std::chrono::steady_clock::now();
+
     CSVReader reader(argv[1]);
     auto parseResults = reader.readAll();
 
+    auto t1 = std::chrono::steady_clock::now();
+
+    // ── Match ────────────────────────────────────────────────────────────────
+    // Route each order to its instrument's book; invalid orders are rejected
+    // immediately without touching the matching engine.
     OrderRouter router;
     std::vector<ExecutionReport> allReports;
 
@@ -26,8 +35,25 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    auto t2 = std::chrono::steady_clock::now();
+
+    // ── Write ────────────────────────────────────────────────────────────────
     CSVWriter writer(argv[2]);
     writer.write(allReports);
+
+    auto t3 = std::chrono::steady_clock::now();
+
+    // ── Profile summary (stderr so it never pollutes the output CSV) ─────────
+    auto ms = [](auto a, auto b) {
+        return std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();
+    };
+    std::cerr << "[perf] parse="   << ms(t0, t1) << "us"
+              << " match="         << ms(t1, t2) << "us"
+              << " write="         << ms(t2, t3) << "us"
+              << " total="         << ms(t0, t3) << "us"
+              << " orders="        << parseResults.size()
+              << " reports="       << allReports.size()
+              << '\n';
 
     return 0;
 }
