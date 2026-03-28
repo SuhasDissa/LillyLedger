@@ -36,6 +36,14 @@ flowchart TD
 
 LillyLedger includes a fully-featured desktop companion application built with Qt6/C++. It provides tools for visualizing order processing metrics and interacting with the central limit order book.
 
+<p align="center">
+  <img src="images/Performance.png" alt="Performance Dashboard" width="800"/>
+</p>
+<p align="center">
+  <img src="images/Order_Book.png" alt="Order Book Explorer" width="400"/>
+  <img src="images/Execution_Reports.png" alt="Execution Reports" width="400"/>
+</p>
+
 Features include:
 
 - **Dashboard & Analytics:** Import `orders.csv` files and view execution metrics, including processing throughput and order distribution charts.
