@@ -29,16 +29,14 @@
 #include <vector>
 
 namespace {
-constexpr int kTimestampColumn = 0;
+constexpr int kOrderIdColumn = 0;
 constexpr int kClientIdColumn = 1;
-constexpr int kOrderIdColumn = 2;
-constexpr int kInstrumentColumn = 3;
-constexpr int kSideColumn = 4;
-constexpr int kPriceColumn = 5;
-constexpr int kQtyColumn = 6;
-constexpr int kStatusColumn = 7;
-constexpr int kReasonColumn = 8;
-constexpr int kColumnCount = 9;
+constexpr int kInstrumentColumn = 2;
+constexpr int kSideColumn = 3;
+constexpr int kStatusColumn = 4;
+constexpr int kQtyColumn = 5;
+constexpr int kPriceColumn = 6;
+constexpr int kColumnCount = 7;
 constexpr int kControlHeight = 34;
 constexpr int kTableRowHeight = 42;
 
@@ -90,20 +88,6 @@ QString sideDisplay(Side side) {
         return "SELL";
     }
     return "";
-}
-
-QString compactTimestamp(const ExecutionReport &report) {
-    const QString ts = fixedCharToQString(report.transactTime, kTransactTimeLen);
-    if (ts.size() < 19 || ts[8] != '-') {
-        return ts;
-    }
-
-    const QString hhmmssMs = ts.mid(9);
-    if (hhmmssMs.size() < 10) {
-        return hhmmssMs;
-    }
-
-    return QString("%1:%2:%3").arg(hhmmssMs.mid(0, 2), hhmmssMs.mid(2, 2), hhmmssMs.mid(4, 6));
 }
 
 QColor statusBackground(Status status) {
@@ -217,8 +201,8 @@ class ExecutionReportsModel : public QAbstractTableModel {
         }
 
         static const std::array<const char *, kColumnCount> kHeaders = {
-            "Timestamp", "Client ID", "Order ID", "Instrument", "Side",
-            "Price",     "Qty",       "Status",   "Reason"};
+            "Order ID", "Client Order ID", "Instrument", "Side",
+            "Exec Status", "Quantity", "Price"};
 
         if (section < 0 || section >= kColumnCount) {
             return {};
@@ -236,24 +220,20 @@ class ExecutionReportsModel : public QAbstractTableModel {
 
         if (role == Qt::DisplayRole) {
             switch (index.column()) {
-            case kTimestampColumn:
-                return compactTimestamp(report);
-            case kClientIdColumn:
-                return fixedCharToQString(report.clientOrderId, kClientOrderIdLen);
             case kOrderIdColumn:
                 return fixedCharToQString(report.orderId, kOrderIdLen);
+            case kClientIdColumn:
+                return fixedCharToQString(report.clientOrderId, kClientOrderIdLen);
             case kInstrumentColumn:
                 return instrumentDisplay(report.instrument);
             case kSideColumn:
                 return sideDisplay(report.side);
-            case kPriceColumn:
-                return QString::number(report.price, 'f', 2);
-            case kQtyColumn:
-                return QLocale().toString(static_cast<qlonglong>(report.quantity));
             case kStatusColumn:
                 return statusDisplay(report.status);
-            case kReasonColumn:
-                return fixedCharToQString(report.reason, kReasonLen);
+            case kQtyColumn:
+                return QLocale().toString(static_cast<qlonglong>(report.quantity));
+            case kPriceColumn:
+                return QString::number(report.price, 'f', 2);
             default:
                 return {};
             }
@@ -262,6 +242,9 @@ class ExecutionReportsModel : public QAbstractTableModel {
         if (role == Qt::TextAlignmentRole) {
             if (index.column() == kPriceColumn || index.column() == kQtyColumn) {
                 return static_cast<int>(Qt::AlignRight | Qt::AlignVCenter);
+            }
+            if (index.column() == kSideColumn || index.column() == kStatusColumn) {
+                return static_cast<int>(Qt::AlignCenter);
             }
             return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
         }
@@ -438,28 +421,22 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
         }
 
         switch (left.column()) {
-        case kTimestampColumn:
-            return fixedCharToQString(lhs->transactTime, kTransactTimeLen) <
-                   fixedCharToQString(rhs->transactTime, kTransactTimeLen);
-        case kClientIdColumn:
-            return fixedCharToQString(lhs->clientOrderId, kClientOrderIdLen) <
-                   fixedCharToQString(rhs->clientOrderId, kClientOrderIdLen);
         case kOrderIdColumn:
             return fixedCharToQString(lhs->orderId, kOrderIdLen) <
                    fixedCharToQString(rhs->orderId, kOrderIdLen);
+        case kClientIdColumn:
+            return fixedCharToQString(lhs->clientOrderId, kClientOrderIdLen) <
+                   fixedCharToQString(rhs->clientOrderId, kClientOrderIdLen);
         case kInstrumentColumn:
             return static_cast<int>(lhs->instrument) < static_cast<int>(rhs->instrument);
         case kSideColumn:
             return static_cast<int>(lhs->side) < static_cast<int>(rhs->side);
-        case kPriceColumn:
-            return lhs->price < rhs->price;
-        case kQtyColumn:
-            return lhs->quantity < rhs->quantity;
         case kStatusColumn:
             return static_cast<int>(lhs->status) < static_cast<int>(rhs->status);
-        case kReasonColumn:
-            return fixedCharToQString(lhs->reason, kReasonLen) <
-                   fixedCharToQString(rhs->reason, kReasonLen);
+        case kQtyColumn:
+            return lhs->quantity < rhs->quantity;
+        case kPriceColumn:
+            return lhs->price < rhs->price;
         default:
             return QSortFilterProxyModel::lessThan(left, right);
         }
@@ -506,7 +483,7 @@ void ExecutionReportsWidget::exportCsv() {
     }
 
     QTextStream out(&file);
-    out << "Timestamp,Client ID,Order ID,Instrument,Side,Price,Qty,Status,Reason\n";
+    out << "Order ID,Client Order ID,Instrument,Side,Exec Status,Quantity,Price\n";
 
     for (int row = 0; row < proxyModel_->rowCount(); ++row) {
         QStringList fields;
@@ -611,15 +588,13 @@ void ExecutionReportsWidget::setupUi() {
     tableView_->verticalHeader()->setVisible(false);
     auto *header = tableView_->horizontalHeader();
     header->setMinimumSectionSize(56);
-    header->setSectionResizeMode(kTimestampColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kClientIdColumn, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(kOrderIdColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kClientIdColumn, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(kInstrumentColumn, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(kSideColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kPriceColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(kStatusColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kReasonColumn, QHeaderView::Stretch);
+    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kPriceColumn, QHeaderView::Stretch);
     tableView_->setAlternatingRowColors(false);
     tableView_->setStyleSheet(
         "QTableView {"

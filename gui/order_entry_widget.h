@@ -56,8 +56,6 @@ class ManualOrderEntryWidget : public QWidget {
   private:
     void setupUi();
     void setupConnections();
-    void updateOrderIdPreview();
-    QString previewOrderId() const;
     void resetForm();
     bool validateForm();
     void clearValidationErrors();
@@ -75,12 +73,9 @@ class ManualOrderEntryWidget : public QWidget {
     QSpinBox *quantitySpin_{nullptr};
     QLabel *quantityErrorLabel_{nullptr};
     QDoubleSpinBox *priceSpin_{nullptr};
-    QLineEdit *orderIdPreviewEdit_{nullptr};
     QPushButton *submitButton_{nullptr};
     QPushButton *resetButton_{nullptr};
     QLabel *successLabel_{nullptr};
     QGraphicsOpacityEffect *successOpacityEffect_{nullptr};
     QTimer *successHoldTimer_{nullptr};
-
-    int nextOrderCounter_{1};
 };

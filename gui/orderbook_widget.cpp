@@ -1,29 +1,53 @@
 #include "orderbook_widget.h"
 
 #include <QAbstractItemView>
+#include <QBrush>
 #include <QColor>
 #include <QFont>
-#include <QFontDatabase>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLocale>
 #include <QPropertyAnimation>
-#include <QSplitter>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <map>
-#include <utility>
 
 namespace {
 constexpr int kMaxLevels = 10;
-constexpr int kPriceColumn = 0;
-constexpr int kQtyColumn = 1;
-constexpr int kOrdersColumn = 2;
-constexpr int kCumQtyColumn = 3;
 constexpr int kTableRowHeight = 34;
+constexpr int kDefaultVisibleRows = 4;
+
+constexpr int kBuyPrSeqColumn = 0;
+constexpr int kBuyOrderIdColumn = 1;
+constexpr int kBuyTraderIdColumn = 2;
+constexpr int kBuyQtyColumn = 3;
+constexpr int kBuyPriceColumn = 4;
+
+constexpr int kSellPriceColumn = 5;
+constexpr int kSellQtyColumn = 6;
+constexpr int kSellTraderIdColumn = 7;
+constexpr int kSellOrderIdColumn = 8;
+constexpr int kSellPrSeqColumn = 9;
+
+QString fixedCharToQString(const char *text, std::size_t maxLen) {
+    std::size_t len = 0;
+    while (len < maxLen && text[len] != '\0') {
+        ++len;
+    }
+    return QString::fromLatin1(text, static_cast<int>(len));
+}
+
+QColor interpolateColor(const QColor &from, const QColor &to, double t) {
+    const double clamped = std::clamp(t, 0.0, 1.0);
+    const int red = static_cast<int>(from.red() + (to.red() - from.red()) * clamped);
+    const int green = static_cast<int>(from.green() + (to.green() - from.green()) * clamped);
+    const int blue = static_cast<int>(from.blue() + (to.blue() - from.blue()) * clamped);
+    return QColor(red, green, blue);
+}
 
 class AnimatedBookItem : public QObject, public QTableWidgetItem {
     Q_OBJECT
@@ -34,22 +58,14 @@ class AnimatedBookItem : public QObject, public QTableWidgetItem {
         : QObject(nullptr), QTableWidgetItem(text) {}
 
     QColor flashColor() const { return background().color(); }
-
     void setFlashColor(const QColor &color) { setBackground(QBrush(color)); }
 };
 
-QString sideTableStyle() {
-    return "QTableWidget {"
-           " background-color: #ffffff;"
-           " color: #1e1b19;"
-           " border: 1px solid #e8e2d9;"
-           " gridline-color: #f0ebe5;"
-           "}"
-           "QHeaderView::section {"
-           " background-color: #f5f0ea;"
-           " color: #84746a;"
-           " border: 1px solid #e8e2d9;"
-           " padding: 8px 10px;"
+QString tableStyle() {
+    // Styles that can't be set globally (column-specific header bg, row hover)
+    // Everything else inherits from the app-level stylesheet.
+    return "QTableWidget::item:hover {"
+           "  background-color: #fdf4ee;"
            "}";
 }
 } // namespace
@@ -58,91 +74,140 @@ OrderBookWidget::OrderBookWidget(QWidget *parent) : QWidget(parent) { setupUi();
 
 void OrderBookWidget::updateBook(const std::vector<BookEntry> &buys,
                                  const std::vector<BookEntry> &sells, Instrument instrument) {
-    instrumentHeaderLabel_->setText(instrumentLabelText(instrument));
+    instrumentHeaderLabel_->setText(QString("Orderbook : %1").arg(instrumentLabelText(instrument)));
 
-    const std::vector<PriceLevel> bidLevels = buildBuyLevels(buys);
-    const std::vector<PriceLevel> askLevelsAscending = buildSellLevelsAscending(sells);
+    const std::vector<BookRow> bidRows = buildBookRows(buys);
+    const std::vector<BookRow> askRows = buildBookRows(sells);
 
-    updateSpreadLabel(bidLevels, askLevelsAscending);
-    renderAsks(askLevelsAscending);
-    renderBids(bidLevels);
+    updateSpreadLabel(bidRows, askRows);
+    renderBookTable(bidRows, askRows);
 }
 
 void OrderBookWidget::setupUi() {
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(12, 12, 12, 12);
-    mainLayout->setSpacing(10);
+    mainLayout->setSpacing(8);
 
-    instrumentHeaderLabel_ = new QLabel(instrumentLabelText(Instrument::Rose), this);
+    instrumentHeaderLabel_ = new QLabel("Orderbook : 🌹 Rose", this);
+    instrumentHeaderLabel_->setObjectName("OrderBookTitle");
     instrumentHeaderLabel_->setStyleSheet(
-        "QLabel { color: #1e1b19; font-size: 18px; font-weight: 700; }");
+        "QLabel#OrderBookTitle {"
+        "  color: #1e1b19;"
+        "  font-family: 'Georgia', 'Palatino Linotype', serif;"
+        "  font-size: 17px;"
+        "  font-weight: 400;"
+        "  font-style: italic;"
+        "  letter-spacing: 0.5px;"
+        "}");
     mainLayout->addWidget(instrumentHeaderLabel_);
 
     spreadLabel_ = new QLabel("Spread: N/A", this);
-    spreadLabel_->setStyleSheet("QLabel { color: #c2855a; font-weight: 600; }");
+    spreadLabel_->setStyleSheet(
+        "QLabel {"
+        "  color: #86522b;"
+        "  font-weight: 600;"
+        "  font-size: 12px;"
+        "  font-family: 'Courier New', 'Consolas', monospace;"
+        "  background-color: #fdf4ee;"
+        "  border: 1px solid #ddc4ae;"
+        "  border-radius: 6px;"
+        "  padding: 3px 12px;"
+        "}");
     mainLayout->addWidget(spreadLabel_);
 
-    ladderSplitter_ = new QSplitter(Qt::Vertical, this);
-    ladderSplitter_->setChildrenCollapsible(false);
-    ladderSplitter_->setHandleWidth(2);
-    ladderSplitter_->setStyleSheet("QSplitter::handle { background-color: #e8e2d9; }");
+    bookTable_ = new QTableWidget(this);
+    bookTable_->setColumnCount(10);
+    bookTable_->setHorizontalHeaderLabels(
+        {"Pr.Seq", "Order ID", "Trader ID", "Qty", "Price", "Price", "Qty", "Trader ID",
+         "Order ID", "Pr.Seq"});
+    setupBookTable(bookTable_);
+    mainLayout->addWidget(bookTable_, 1);
 
-    asksTable_ = new QTableWidget(ladderSplitter_);
-    setupLadderTable(asksTable_);
+    connect(bookTable_, &QTableWidget::cellClicked, this, [this](int row, int column) {
+        int priceColumn = -1;
+        Side side = Side::Buy;
+        if (column <= kBuyPriceColumn) {
+            priceColumn = kBuyPriceColumn;
+            side = Side::Buy;
+        } else {
+            priceColumn = kSellPriceColumn;
+            side = Side::Sell;
+        }
 
-    bidsTable_ = new QTableWidget(ladderSplitter_);
-    setupLadderTable(bidsTable_);
-
-    ladderSplitter_->addWidget(asksTable_);
-    ladderSplitter_->addWidget(bidsTable_);
-    ladderSplitter_->setStretchFactor(0, 1);
-    ladderSplitter_->setStretchFactor(1, 1);
-    mainLayout->addWidget(ladderSplitter_, 1);
-
-    connect(asksTable_, &QTableWidget::cellClicked, this, [this](int row, int) {
-        auto *priceItem = asksTable_->item(row, kPriceColumn);
+        QTableWidgetItem *priceItem = bookTable_->item(row, priceColumn);
         if (priceItem == nullptr) {
             return;
         }
-        emit priceClicked(priceItem->data(Qt::UserRole).toDouble(), Side::Sell);
-    });
 
-    connect(bidsTable_, &QTableWidget::cellClicked, this, [this](int row, int) {
-        auto *priceItem = bidsTable_->item(row, kPriceColumn);
-        if (priceItem == nullptr) {
+        bool ok = false;
+        const double price = priceItem->data(Qt::UserRole).toDouble(&ok);
+        if (!ok || price <= 0.0) {
             return;
         }
-        emit priceClicked(priceItem->data(Qt::UserRole).toDouble(), Side::Buy);
+
+        emit priceClicked(price, side);
     });
 
-    setStyleSheet("QWidget { background-color: #fff8f5; }");
+    setStyleSheet(
+        "OrderBookWidget { background-color: #faf8f4; }"
+        "QTableWidget {"
+        "  background-color: #ffffff;"
+        "  border: 1px solid #ead8ce;"
+        "  border-radius: 8px;"
+        "  gridline-color: #f0e8e2;"
+        "  color: #1e1b19;"
+        "  font-family: 'Courier New', 'Consolas', monospace;"
+        "  font-size: 12px;"
+        "}"
+        "QHeaderView::section {"
+        "  background-color: #f5ede7;"
+        "  color: #7a6a5e;"
+        "  border: none;"
+        "  border-bottom: 1.5px solid #ead8ce;"
+        "  border-right: 1px solid #ead8ce;"
+        "  padding: 8px 8px;"
+        "  font-weight: 700;"
+        "  font-size: 10px;"
+        "  font-family: 'DM Sans', 'Segoe UI', sans-serif;"
+        "  letter-spacing: 0.5px;"
+        "}");
 }
 
-void OrderBookWidget::setupLadderTable(QTableWidget *table) {
-    table->setColumnCount(4);
-    table->setHorizontalHeaderLabels({"Price", "Qty", "Orders", "Cumulative Qty"});
-    QFont tableFont = table->font();
-    tableFont.setPointSize(11);
-    table->setFont(tableFont);
+void OrderBookWidget::setupBookTable(QTableWidget *table) {
     table->setSelectionMode(QAbstractItemView::NoSelection);
-    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setSelectionBehavior(QAbstractItemView::SelectItems);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setFocusPolicy(Qt::NoFocus);
     table->setAlternatingRowColors(false);
     table->setWordWrap(false);
-    table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-    table->setShowGrid(false);
+    table->setShowGrid(true);
     table->verticalHeader()->setVisible(false);
     table->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
     table->verticalHeader()->setMinimumSectionSize(kTableRowHeight);
+
+    QFont tableFont = table->font();
+    tableFont.setPointSize(11);
+    table->setFont(tableFont);
+
     auto *header = table->horizontalHeader();
     header->setMinimumSectionSize(56);
-    header->setSectionResizeMode(kPriceColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kOrdersColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kCumQtyColumn, QHeaderView::Stretch);
-    table->horizontalHeader()->setFixedHeight(32);
-    table->setStyleSheet(sideTableStyle());
+    for (int col = 0; col < table->columnCount(); ++col) {
+        header->setSectionResizeMode(col, QHeaderView::Stretch);
+
+        QTableWidgetItem *headerItem = table->horizontalHeaderItem(col);
+        if (headerItem == nullptr) {
+            continue;
+        }
+        headerItem->setTextAlignment(Qt::AlignCenter);
+        if (col <= kBuyPriceColumn) {
+            headerItem->setBackground(QColor("#2d6b4a")); // deep botanical green — buy side
+        } else {
+            headerItem->setBackground(QColor("#9e3a3a")); // deep dried rose — sell side
+        }
+        headerItem->setForeground(QColor("#ffffff"));
+    }
+
+    table->setStyleSheet(tableStyle());
 }
 
 QString OrderBookWidget::instrumentLabelText(Instrument instrument) {
@@ -161,199 +226,152 @@ QString OrderBookWidget::instrumentLabelText(Instrument instrument) {
     return "Unknown";
 }
 
-QColor OrderBookWidget::interpolateColor(const QColor &from, const QColor &to, double t) {
-    const double clamped = std::clamp(t, 0.0, 1.0);
-    const int red = static_cast<int>(from.red() + (to.red() - from.red()) * clamped);
-    const int green = static_cast<int>(from.green() + (to.green() - from.green()) * clamped);
-    const int blue = static_cast<int>(from.blue() + (to.blue() - from.blue()) * clamped);
-    return QColor(red, green, blue);
+std::vector<OrderBookWidget::BookRow>
+OrderBookWidget::buildBookRows(const std::vector<BookEntry> &entries) {
+    std::vector<BookRow> rows;
+    rows.reserve(std::min(static_cast<int>(entries.size()), kMaxLevels));
+
+    for (int i = 0; i < static_cast<int>(entries.size()) && i < kMaxLevels; ++i) {
+        const BookEntry &entry = entries[static_cast<std::size_t>(i)];
+        BookRow row;
+        row.prioritySeq = static_cast<int>(entry.seqNum) + 1;
+        row.orderId = fixedCharToQString(entry.orderId, sizeof(entry.orderId));
+        row.traderId = fixedCharToQString(entry.order.clientOrderId, sizeof(entry.order.clientOrderId));
+        row.quantity = entry.remainingQty;
+        row.price = entry.order.price;
+        rows.push_back(row);
+    }
+
+    return rows;
 }
 
-std::vector<OrderBookWidget::PriceLevel>
-OrderBookWidget::buildBuyLevels(const std::vector<BookEntry> &buys) {
-    struct Bucket {
-        uint64_t qty{0};
-        int orders{0};
+void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
+                                      const std::vector<BookRow> &askRows) {
+    const int rowCount =
+        std::max(kDefaultVisibleRows,
+                 std::max(static_cast<int>(bidRows.size()), static_cast<int>(askRows.size())));
+    bookTable_->setRowCount(rowCount);
+
+    // Warm editorial palette — green tints for bids, rose tints for asks
+    const QColor buyNear("#e8f4ee");   // lightest green (best bid — closest to spread)
+    const QColor buyFar("#c8e6d5");    // deeper green (far from spread)
+    const QColor buyText("#1a4a30");   // deep botanical green text
+    const QColor sellNear("#fdf0f0");  // lightest rose (best ask)
+    const QColor sellFar("#f5d4d4");   // deeper rose (far from spread)
+    const QColor sellText("#6b1f1f");  // deep dried rose text
+    const QColor buyBlank("#f5faf7");  // empty bid cell — very faint green
+    const QColor sellBlank("#fdf8f8"); // empty ask cell — very faint rose
+
+    std::map<QString, uint64_t> currentBidQtyByOrderId;
+    std::map<QString, uint64_t> currentAskQtyByOrderId;
+
+    auto makeCell = [](const QString &text, const QColor &bg, const QColor &fg,
+                       Qt::Alignment alignment) {
+        auto *item = new AnimatedBookItem(text);
+        item->setBackground(bg);
+        item->setForeground(fg);
+        item->setTextAlignment(alignment);
+        return item;
     };
 
-    std::map<double, Bucket, std::greater<double>> aggregated;
-    for (const BookEntry &entry : buys) {
-        auto &bucket = aggregated[entry.order.price];
-        bucket.qty += entry.remainingQty;
-        bucket.orders += 1;
-    }
+    for (int row = 0; row < rowCount; ++row) {
+        if (row < static_cast<int>(bidRows.size())) {
+            const BookRow &bookRow = bidRows[static_cast<std::size_t>(row)];
+            currentBidQtyByOrderId[bookRow.orderId] = bookRow.quantity;
+            const double t =
+                bidRows.size() <= 1 ? 0.0 : static_cast<double>(row) / (bidRows.size() - 1);
+            const QColor rowBg = interpolateColor(buyNear, buyFar, t);
 
-    std::vector<PriceLevel> levels;
-    levels.reserve(kMaxLevels);
+            auto *seqItem = makeCell(QString::number(bookRow.prioritySeq), rowBg, buyText, Qt::AlignCenter);
+            auto *orderIdItem = makeCell(bookRow.orderId, rowBg, buyText, Qt::AlignCenter);
+            auto *traderIdItem = makeCell(bookRow.traderId, rowBg, buyText, Qt::AlignCenter);
+            auto *qtyItem = makeCell(formatNumber(bookRow.quantity), rowBg, buyText,
+                                     Qt::AlignRight | Qt::AlignVCenter);
+            auto *priceItem = makeCell(formatPrice(bookRow.price), rowBg, buyText,
+                                       Qt::AlignRight | Qt::AlignVCenter);
+            priceItem->setData(Qt::UserRole, bookRow.price);
 
-    uint64_t cumulative = 0;
-    for (const auto &[price, bucket] : aggregated) {
-        cumulative += bucket.qty;
-        levels.push_back(PriceLevel{price, bucket.qty, bucket.orders, cumulative});
-        if (static_cast<int>(levels.size()) >= kMaxLevels) {
-            break;
+            bookTable_->setItem(row, kBuyPrSeqColumn, seqItem);
+            bookTable_->setItem(row, kBuyOrderIdColumn, orderIdItem);
+            bookTable_->setItem(row, kBuyTraderIdColumn, traderIdItem);
+            bookTable_->setItem(row, kBuyQtyColumn, qtyItem);
+            bookTable_->setItem(row, kBuyPriceColumn, priceItem);
+
+            const auto prev = previousBidQtyByOrderId_.find(bookRow.orderId);
+            if (prev != previousBidQtyByOrderId_.end() && prev->second != bookRow.quantity) {
+                animateCellsFlash(bookTable_, row, kBuyPrSeqColumn, kBuyPriceColumn, rowBg);
+            }
+        } else {
+            bookTable_->setItem(row, kBuyPrSeqColumn,
+                                makeCell("", buyBlank, buyText, Qt::AlignCenter));
+            bookTable_->setItem(row, kBuyOrderIdColumn,
+                                makeCell("", buyBlank, buyText, Qt::AlignCenter));
+            bookTable_->setItem(row, kBuyTraderIdColumn,
+                                makeCell("", buyBlank, buyText, Qt::AlignCenter));
+            bookTable_->setItem(row, kBuyQtyColumn,
+                                makeCell("", buyBlank, buyText, Qt::AlignRight | Qt::AlignVCenter));
+            bookTable_->setItem(row, kBuyPriceColumn,
+                                makeCell("", buyBlank, buyText, Qt::AlignRight | Qt::AlignVCenter));
+        }
+
+        if (row < static_cast<int>(askRows.size())) {
+            const BookRow &bookRow = askRows[static_cast<std::size_t>(row)];
+            currentAskQtyByOrderId[bookRow.orderId] = bookRow.quantity;
+            const double t =
+                askRows.size() <= 1 ? 0.0 : static_cast<double>(row) / (askRows.size() - 1);
+            const QColor rowBg = interpolateColor(sellNear, sellFar, t);
+
+            auto *priceItem = makeCell(formatPrice(bookRow.price), rowBg, sellText,
+                                       Qt::AlignRight | Qt::AlignVCenter);
+            priceItem->setData(Qt::UserRole, bookRow.price);
+            auto *qtyItem = makeCell(formatNumber(bookRow.quantity), rowBg, sellText,
+                                     Qt::AlignRight | Qt::AlignVCenter);
+            auto *traderIdItem = makeCell(bookRow.traderId, rowBg, sellText, Qt::AlignCenter);
+            auto *orderIdItem = makeCell(bookRow.orderId, rowBg, sellText, Qt::AlignCenter);
+            auto *seqItem = makeCell(QString::number(bookRow.prioritySeq), rowBg, sellText, Qt::AlignCenter);
+
+            bookTable_->setItem(row, kSellPriceColumn, priceItem);
+            bookTable_->setItem(row, kSellQtyColumn, qtyItem);
+            bookTable_->setItem(row, kSellTraderIdColumn, traderIdItem);
+            bookTable_->setItem(row, kSellOrderIdColumn, orderIdItem);
+            bookTable_->setItem(row, kSellPrSeqColumn, seqItem);
+
+            const auto prev = previousAskQtyByOrderId_.find(bookRow.orderId);
+            if (prev != previousAskQtyByOrderId_.end() && prev->second != bookRow.quantity) {
+                animateCellsFlash(bookTable_, row, kSellPriceColumn, kSellPrSeqColumn, rowBg);
+            }
+        } else {
+            bookTable_->setItem(row, kSellPriceColumn,
+                                makeCell("", sellBlank, sellText, Qt::AlignRight | Qt::AlignVCenter));
+            bookTable_->setItem(row, kSellQtyColumn,
+                                makeCell("", sellBlank, sellText, Qt::AlignRight | Qt::AlignVCenter));
+            bookTable_->setItem(row, kSellTraderIdColumn,
+                                makeCell("", sellBlank, sellText, Qt::AlignCenter));
+            bookTable_->setItem(row, kSellOrderIdColumn,
+                                makeCell("", sellBlank, sellText, Qt::AlignCenter));
+            bookTable_->setItem(row, kSellPrSeqColumn,
+                                makeCell("", sellBlank, sellText, Qt::AlignCenter));
         }
     }
 
-    return levels;
+    previousBidQtyByOrderId_ = std::move(currentBidQtyByOrderId);
+    previousAskQtyByOrderId_ = std::move(currentAskQtyByOrderId);
 }
 
-std::vector<OrderBookWidget::PriceLevel>
-OrderBookWidget::buildSellLevelsAscending(const std::vector<BookEntry> &sells) {
-    struct Bucket {
-        uint64_t qty{0};
-        int orders{0};
-    };
-
-    std::map<double, Bucket> aggregated;
-    for (const BookEntry &entry : sells) {
-        auto &bucket = aggregated[entry.order.price];
-        bucket.qty += entry.remainingQty;
-        bucket.orders += 1;
-    }
-
-    std::vector<PriceLevel> levels;
-    levels.reserve(kMaxLevels);
-
-    uint64_t cumulative = 0;
-    for (const auto &[price, bucket] : aggregated) {
-        cumulative += bucket.qty;
-        levels.push_back(PriceLevel{price, bucket.qty, bucket.orders, cumulative});
-        if (static_cast<int>(levels.size()) >= kMaxLevels) {
-            break;
-        }
-    }
-
-    return levels;
-}
-
-void OrderBookWidget::renderAsks(const std::vector<PriceLevel> &askLevelsAscending) {
-    std::vector<PriceLevel> displayLevels = askLevelsAscending;
-    std::reverse(displayLevels.begin(), displayLevels.end());
-
-    asksTable_->setRowCount(static_cast<int>(displayLevels.size()));
-
-    const QColor textColor("#b84a4a");
-    const QColor deepRed("#f8d7d7");
-    const QColor lightRed("#fdeeee");
-    const QFont mono = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-
-    std::map<double, uint64_t> currentQtyByPrice;
-
-    for (int row = 0; row < static_cast<int>(displayLevels.size()); ++row) {
-        const PriceLevel &level = displayLevels[static_cast<std::size_t>(row)];
-        currentQtyByPrice[level.price] = level.quantity;
-
-        const double t = (displayLevels.size() <= 1)
-                             ? 1.0
-                             : static_cast<double>(row) / (displayLevels.size() - 1);
-        const QColor rowColor = interpolateColor(deepRed, lightRed, t);
-
-        auto *priceItem = new AnimatedBookItem(formatPrice(level.price));
-        priceItem->setData(Qt::UserRole, level.price);
-        priceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        priceItem->setFont(mono);
-        priceItem->setForeground(textColor);
-        priceItem->setBackground(QBrush(rowColor));
-
-        auto *qtyItem = new AnimatedBookItem(formatNumber(level.quantity));
-        qtyItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        qtyItem->setForeground(textColor);
-        qtyItem->setBackground(QBrush(rowColor));
-
-        auto *ordersItem = new AnimatedBookItem(QString::number(level.orders));
-        ordersItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        ordersItem->setForeground(textColor);
-        ordersItem->setBackground(QBrush(rowColor));
-
-        auto *cumItem = new AnimatedBookItem(formatNumber(level.cumulativeQty));
-        cumItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        cumItem->setForeground(textColor);
-        cumItem->setBackground(QBrush(rowColor));
-
-        asksTable_->setItem(row, kPriceColumn, priceItem);
-        asksTable_->setItem(row, kQtyColumn, qtyItem);
-        asksTable_->setItem(row, kOrdersColumn, ordersItem);
-        asksTable_->setItem(row, kCumQtyColumn, cumItem);
-
-        const auto itPrevious = previousAskQtyByPrice_.find(level.price);
-        if (itPrevious != previousAskQtyByPrice_.end() && itPrevious->second != level.quantity) {
-            animateRowFlash(asksTable_, row, rowColor);
-        }
-    }
-
-    previousAskQtyByPrice_ = std::move(currentQtyByPrice);
-}
-
-void OrderBookWidget::renderBids(const std::vector<PriceLevel> &bidLevels) {
-    bidsTable_->setRowCount(static_cast<int>(bidLevels.size()));
-
-    const QColor textColor("#2d6b4a");
-    const QColor lightGreen("#e8f4ee");
-    const QColor deepGreen("#cde5d4");
-    const QFont mono = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-
-    std::map<double, uint64_t> currentQtyByPrice;
-
-    for (int row = 0; row < static_cast<int>(bidLevels.size()); ++row) {
-        const PriceLevel &level = bidLevels[static_cast<std::size_t>(row)];
-        currentQtyByPrice[level.price] = level.quantity;
-
-        const double t =
-            (bidLevels.size() <= 1) ? 0.0 : static_cast<double>(row) / (bidLevels.size() - 1);
-        const QColor rowColor = interpolateColor(lightGreen, deepGreen, t);
-
-        auto *priceItem = new AnimatedBookItem(formatPrice(level.price));
-        priceItem->setData(Qt::UserRole, level.price);
-        priceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        priceItem->setFont(mono);
-        priceItem->setForeground(textColor);
-        priceItem->setBackground(QBrush(rowColor));
-
-        auto *qtyItem = new AnimatedBookItem(formatNumber(level.quantity));
-        qtyItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        qtyItem->setForeground(textColor);
-        qtyItem->setBackground(QBrush(rowColor));
-
-        auto *ordersItem = new AnimatedBookItem(QString::number(level.orders));
-        ordersItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        ordersItem->setForeground(textColor);
-        ordersItem->setBackground(QBrush(rowColor));
-
-        auto *cumItem = new AnimatedBookItem(formatNumber(level.cumulativeQty));
-        cumItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        cumItem->setForeground(textColor);
-        cumItem->setBackground(QBrush(rowColor));
-
-        bidsTable_->setItem(row, kPriceColumn, priceItem);
-        bidsTable_->setItem(row, kQtyColumn, qtyItem);
-        bidsTable_->setItem(row, kOrdersColumn, ordersItem);
-        bidsTable_->setItem(row, kCumQtyColumn, cumItem);
-
-        const auto itPrevious = previousBidQtyByPrice_.find(level.price);
-        if (itPrevious != previousBidQtyByPrice_.end() && itPrevious->second != level.quantity) {
-            animateRowFlash(bidsTable_, row, rowColor);
-        }
-    }
-
-    previousBidQtyByPrice_ = std::move(currentQtyByPrice);
-}
-
-void OrderBookWidget::updateSpreadLabel(const std::vector<PriceLevel> &bidLevels,
-                                        const std::vector<PriceLevel> &askLevelsAscending) {
-    if (bidLevels.empty() || askLevelsAscending.empty()) {
+void OrderBookWidget::updateSpreadLabel(const std::vector<BookRow> &bidRows,
+                                        const std::vector<BookRow> &askRows) {
+    if (bidRows.empty() || askRows.empty()) {
         spreadLabel_->setText("Spread: N/A");
         return;
     }
 
-    const double bestBid = bidLevels.front().price;
-    const double bestAsk = askLevelsAscending.front().price;
-    const double spread = bestAsk - bestBid;
+    const double spread = askRows.front().price - bidRows.front().price;
     spreadLabel_->setText(QString("Spread: $%1").arg(spread, 0, 'f', 2));
 }
 
-void OrderBookWidget::animateRowFlash(QTableWidget *table, int row, const QColor &targetColor) {
-    for (int col = 0; col < table->columnCount(); ++col) {
+void OrderBookWidget::animateCellsFlash(QTableWidget *table, int row, int firstColumn,
+                                        int lastColumn, const QColor &targetColor) {
+    for (int col = firstColumn; col <= lastColumn; ++col) {
         auto *item = dynamic_cast<AnimatedBookItem *>(table->item(row, col));
         if (item == nullptr) {
             continue;

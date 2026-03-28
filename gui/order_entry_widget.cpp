@@ -4,6 +4,7 @@
 #include <QDoubleSpinBox>
 #include <QEasingCurve>
 #include <QFormLayout>
+#include <QFrame>
 #include <QGraphicsOpacityEffect>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -13,6 +14,7 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
+#include <QScrollArea>
 #include <QSpinBox>
 #include <QStyle>
 #include <QTimer>
@@ -38,7 +40,11 @@ BuySellToggle::BuySellToggle(QWidget *parent) : QWidget(parent) {
     layout->addWidget(sellButton_);
 
     setStyleSheet(
-        "BuySellToggle { background-color: #f5f0ea; border: 1px solid #d6c3b7; border-radius: 10px; }");
+        "BuySellToggle {"
+        "  background-color: #f5ede7;"
+        "  border: 1.5px solid #ddd0c6;"
+        "  border-radius: 8px;"
+        "}");
 
     connect(buyButton_, &QPushButton::clicked, this, [this]() { setSide(Side::Buy); });
     connect(sellButton_, &QPushButton::clicked, this, [this]() { setSide(Side::Sell); });
@@ -65,22 +71,51 @@ void BuySellToggle::updateStyles() {
 
     if (currentSide_ == Side::Buy) {
         buyButton_->setStyleSheet(
-            "QPushButton { background-color: #a6e3a1; color: #1e3a2a; border: none; border-radius: 6px; font-weight: 700; }");
+            "QPushButton {"
+            "  background-color: #d4eddf;"
+            "  color: #1e3a2a;"
+            "  border: none;"
+            "  border-radius: 6px;"
+            "  font-weight: 700;"
+            "  font-size: 13px;"
+            "  letter-spacing: 0.5px;"
+            "}");
         sellButton_->setStyleSheet(
-            "QPushButton { background-color: #ffffff; color: #52443c; border: none; border-radius: 6px; font-weight: 600; }");
+            "QPushButton {"
+            "  background-color: transparent;"
+            "  color: #9a8a7e;"
+            "  border: none;"
+            "  border-radius: 6px;"
+            "  font-weight: 500;"
+            "  font-size: 13px;"
+            "}");
         return;
     }
 
     buyButton_->setStyleSheet(
-        "QPushButton { background-color: #ffffff; color: #52443c; border: none; border-radius: 6px; font-weight: 600; }");
+        "QPushButton {"
+        "  background-color: transparent;"
+        "  color: #9a8a7e;"
+        "  border: none;"
+        "  border-radius: 6px;"
+        "  font-weight: 500;"
+        "  font-size: 13px;"
+        "}");
     sellButton_->setStyleSheet(
-        "QPushButton { background-color: #fdf0f0; color: #9e3a3a; border: none; border-radius: 6px; font-weight: 700; }");
+        "QPushButton {"
+        "  background-color: #f9dede;"
+        "  color: #7a1f1f;"
+        "  border: none;"
+        "  border-radius: 6px;"
+        "  font-weight: 700;"
+        "  font-size: 13px;"
+        "  letter-spacing: 0.5px;"
+        "}");
 }
 
 ManualOrderEntryWidget::ManualOrderEntryWidget(QWidget *parent) : QWidget(parent) {
     setupUi();
     setupConnections();
-    updateOrderIdPreview();
 }
 
 void ManualOrderEntryWidget::prefillPrice(double price, Side side) {
@@ -108,8 +143,6 @@ void ManualOrderEntryWidget::onSubmitClicked() {
     order.price = priceSpin_->value();
 
     emit orderSubmitted(order);
-
-    ++nextOrderCounter_;
     resetForm();
     showSuccessMessage();
 }
@@ -119,15 +152,29 @@ void ManualOrderEntryWidget::onResetClicked() { resetForm(); }
 void ManualOrderEntryWidget::setupUi() {
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(12);
+    mainLayout->setSpacing(0);
 
-    orderGroup_ = new QGroupBox("New Order", this);
-    orderGroup_->setMaximumWidth(760);
+    // Scroll area so form is reachable on small screens
+    auto *scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setStyleSheet("QScrollArea { background-color: #faf8f4; border: none; }");
+
+    auto *scrollContent = new QWidget(scrollArea);
+    scrollContent->setStyleSheet("QWidget { background-color: #faf8f4; }");
+    auto *scrollLayout = new QVBoxLayout(scrollContent);
+    scrollLayout->setContentsMargins(48, 40, 48, 40);
+    scrollLayout->setSpacing(0);
+    scrollLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+
+    orderGroup_ = new QGroupBox("NEW ORDER", scrollContent);
+    orderGroup_->setFixedWidth(520);
     auto *formLayout = new QFormLayout(orderGroup_);
     formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
     formLayout->setFormAlignment(Qt::AlignTop);
-    formLayout->setHorizontalSpacing(12);
-    formLayout->setVerticalSpacing(10);
+    formLayout->setHorizontalSpacing(20);
+    formLayout->setVerticalSpacing(16);
 
     clientIdEdit_ = new QLineEdit(orderGroup_);
     clientIdEdit_->setMaxLength(7);
@@ -174,30 +221,39 @@ void ManualOrderEntryWidget::setupUi() {
     priceSpin_->setValue(0.01);
     formLayout->addRow("Price", priceSpin_);
 
-    orderIdPreviewEdit_ = new QLineEdit(orderGroup_);
-    orderIdPreviewEdit_->setReadOnly(true);
-    orderIdPreviewEdit_->setStyleSheet(
-        "QLineEdit { background-color: #f5f0ea; color: #84746a; border: 1px solid #e8e2d9; }");
-    formLayout->addRow("Order ID", orderIdPreviewEdit_);
-
     auto *submitContainer = new QWidget(orderGroup_);
     auto *submitLayout = new QVBoxLayout(submitContainer);
     submitLayout->setContentsMargins(0, 0, 0, 0);
     submitLayout->setSpacing(6);
 
-    submitButton_ = new QPushButton("Submit Order", submitContainer);
-    submitButton_->setMinimumHeight(44);
+    submitButton_ = new QPushButton("Submit Order →", submitContainer);
+    submitButton_->setMinimumHeight(48);
     submitButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     submitButton_->setStyleSheet(
-        "QPushButton { background-color: #86522b; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; }"
-        "QPushButton:hover { background-color: #754624; }"
-        "QPushButton:pressed { background-color: #653b1f; }");
+        "QPushButton {"
+        "  background-color: #86522b;"
+        "  color: #ffffff;"
+        "  border: none;"
+        "  border-radius: 8px;"
+        "  font-weight: 700;"
+        "  font-size: 13px;"
+        "  letter-spacing: 0.5px;"
+        "}"
+        "QPushButton:hover   { background-color: #74461f; }"
+        "QPushButton:pressed { background-color: #613a19; }");
 
     resetButton_ = new QPushButton("Reset", submitContainer);
     resetButton_->setMinimumHeight(36);
     resetButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     resetButton_->setStyleSheet(
-        "QPushButton { background-color: #ffffff; color: #52443c; border: 1px solid #d6c3b7; border-radius: 8px; }");
+        "QPushButton {"
+        "  background-color: transparent;"
+        "  color: #9a8a7e;"
+        "  border: 1.5px solid #ddd0c6;"
+        "  border-radius: 8px;"
+        "  font-size: 12px;"
+        "}"
+        "QPushButton:hover { color: #86522b; border-color: #c2855a; }");
 
     successLabel_ = new QLabel("✓ Order submitted", submitContainer);
     successLabel_->setStyleSheet("QLabel { color: #2c694d; font-weight: 600; }");
@@ -212,8 +268,9 @@ void ManualOrderEntryWidget::setupUi() {
     submitLayout->addWidget(successLabel_);
     formLayout->addRow(QString(), submitContainer);
 
-    mainLayout->addWidget(orderGroup_, 0, Qt::AlignTop | Qt::AlignLeft);
-    mainLayout->addStretch();
+    scrollLayout->addWidget(orderGroup_, 0, Qt::AlignTop | Qt::AlignHCenter);
+    scrollArea->setWidget(scrollContent);
+    mainLayout->addWidget(scrollArea);
 
     successHoldTimer_ = new QTimer(this);
     successHoldTimer_->setSingleShot(true);
@@ -248,7 +305,6 @@ void ManualOrderEntryWidget::setupConnections() {
 
     connect(clientIdEdit_, &QLineEdit::textChanged, this, [this](const QString &) {
         setFieldError(clientIdEdit_, QString());
-        updateOrderIdPreview();
     });
     connect(instrumentCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int) { setFieldError(instrumentCombo_, QString()); });
@@ -257,12 +313,9 @@ void ManualOrderEntryWidget::setupConnections() {
     connect(quantitySpin_, qOverload<int>(&QSpinBox::valueChanged), this, [this](int) {
         setFieldError(quantitySpin_, QString());
         quantityErrorLabel_->setVisible(false);
-        updateOrderIdPreview();
     });
-    connect(priceSpin_, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double) {
-        setFieldError(priceSpin_, QString());
-        updateOrderIdPreview();
-    });
+    connect(priceSpin_, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+            [this](double) { setFieldError(priceSpin_, QString()); });
 
     connect(successHoldTimer_, &QTimer::timeout, this, [this]() {
         auto *fade = new QPropertyAnimation(successOpacityEffect_, "opacity", this);
@@ -277,12 +330,6 @@ void ManualOrderEntryWidget::setupConnections() {
     });
 }
 
-void ManualOrderEntryWidget::updateOrderIdPreview() { orderIdPreviewEdit_->setText(previewOrderId()); }
-
-QString ManualOrderEntryWidget::previewOrderId() const {
-    return QString("CLI%1").arg(nextOrderCounter_, 5, 10, QChar('0'));
-}
-
 void ManualOrderEntryWidget::resetForm() {
     clearValidationErrors();
     clientIdEdit_->clear();
@@ -290,7 +337,6 @@ void ManualOrderEntryWidget::resetForm() {
     sideToggle_->setSide(Side::Buy);
     quantitySpin_->setValue(10);
     priceSpin_->setValue(0.01);
-    updateOrderIdPreview();
 }
 
 bool ManualOrderEntryWidget::validateForm() {
