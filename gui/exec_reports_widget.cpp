@@ -107,29 +107,29 @@ QString compactTimestamp(const ExecutionReport &report) {
 QColor statusBackground(Status status) {
     switch (status) {
     case Status::New:
-        return QColor("#1e3a5f");
+        return QColor("#f7f9fd");
     case Status::Fill:
-        return QColor("#1e3a2a");
+        return QColor("#f5faf7");
     case Status::PFill:
-        return QColor("#3a3a1e");
+        return QColor("#fdf8f4");
     case Status::Rejected:
-        return QColor("#3a1e1e");
+        return QColor("#fdf5f5");
     }
-    return QColor("#2a2a3e");
+    return QColor("#ffffff");
 }
 
 QColor statusForeground(Status status) {
     switch (status) {
     case Status::New:
-        return QColor("#89b4fa");
+        return QColor("#5b8fcf");
     case Status::Fill:
-        return QColor("#a6e3a1");
+        return QColor("#2d6b4a");
     case Status::PFill:
-        return QColor("#f9e2af");
+        return QColor("#c2855a");
     case Status::Rejected:
-        return QColor("#f38ba8");
+        return QColor("#b84a4a");
     }
-    return QColor("#cdd6f4");
+    return QColor("#52443c");
 }
 
 QString csvEscape(QString field) {
@@ -164,7 +164,7 @@ class SideBadgeDelegate : public QStyledItemDelegate {
         const int side = index.data(Qt::UserRole).toInt();
         const bool isBuy = side == static_cast<int>(Side::Buy);
         const QColor pillColor = isBuy ? QColor("#2f9e44") : QColor("#c92a2a");
-        const QColor textColor = QColor("#cdd6f4");
+        const QColor textColor = QColor("#ffffff");
 
         const QString text = index.data(Qt::DisplayRole).toString();
         QFont font = option.font;
@@ -601,17 +601,18 @@ void ExecutionReportsWidget::setupUi() {
     tableView_->setColumnWidth(kQtyColumn, 60);
     tableView_->setColumnWidth(kStatusColumn, 80);
     tableView_->setColumnWidth(kReasonColumn, 200);
+    tableView_->setAlternatingRowColors(false);
     tableView_->setStyleSheet(
         "QTableView {"
-        " background-color: #1e1e2e;"
-        " color: #cdd6f4;"
-        " gridline-color: #313244;"
-        " border: 1px solid #45475a;"
+        " background-color: #ffffff;"
+        " color: #1e1b19;"
+        " gridline-color: #f0ebe5;"
+        " border: 1px solid #e8e2d9;"
         "}"
         "QHeaderView::section {"
-        " background-color: #2a2a3e;"
-        " color: #cdd6f4;"
-        " border: 1px solid #45475a;"
+        " background-color: #f5f0ea;"
+        " color: #84746a;"
+        " border: 1px solid #e8e2d9;"
         " padding: 4px 6px;"
         "}");
     mainLayout->addWidget(tableView_, 1);
@@ -621,13 +622,13 @@ void ExecutionReportsWidget::setupUi() {
 
     totalReportsLabel_ = new QLabel("Total reports: 0", this);
     filledLabel_ = new QLabel("Filled: 0", this);
-    filledLabel_->setStyleSheet("QLabel { color: #a6e3a1; }");
+    filledLabel_->setStyleSheet("QLabel { color: #2d6b4a; }");
     partialFilledLabel_ = new QLabel("Partially filled: 0", this);
-    partialFilledLabel_->setStyleSheet("QLabel { color: #f9e2af; }");
+    partialFilledLabel_->setStyleSheet("QLabel { color: #c2855a; }");
     rejectedLabel_ = new QLabel("Rejected: 0", this);
-    rejectedLabel_->setStyleSheet("QLabel { color: #f38ba8; }");
+    rejectedLabel_->setStyleSheet("QLabel { color: #b84a4a; }");
     newRestingLabel_ = new QLabel("New/resting: 0", this);
-    newRestingLabel_->setStyleSheet("QLabel { color: #89b4fa; }");
+    newRestingLabel_->setStyleSheet("QLabel { color: #5b8fcf; }");
 
     summaryRow->addWidget(totalReportsLabel_);
     summaryRow->addWidget(filledLabel_);
@@ -660,6 +661,25 @@ void ExecutionReportsWidget::setupUi() {
     connect(exportButton_, &QPushButton::clicked, this, &ExecutionReportsWidget::exportCsv);
     connect(tableView_, &QTableView::doubleClicked, this,
             &ExecutionReportsWidget::handleTableDoubleClick);
+
+    setStyleSheet(
+        "QWidget { background-color: #fff8f5; color: #1e1b19; }"
+        "QComboBox, QLineEdit {"
+        " background-color: #ffffff;"
+        " border: 1px solid #e8e2d9;"
+        " border-radius: 10px;"
+        " padding: 4px 8px;"
+        " color: #52443c;"
+        "}"
+        "QPushButton {"
+        " background-color: #ffffff;"
+        " border: 1px solid #d6c3b7;"
+        " border-radius: 8px;"
+        " color: #52443c;"
+        " padding: 5px 10px;"
+        "}"
+        "QPushButton:hover { background-color: #fdf8f4; }"
+        "QLabel { color: #52443c; }");
 }
 
 void ExecutionReportsWidget::updateShowingLabel() {

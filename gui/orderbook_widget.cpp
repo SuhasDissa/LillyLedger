@@ -39,15 +39,15 @@ class AnimatedBookItem : public QObject, public QTableWidgetItem {
 
 QString sideTableStyle() {
     return "QTableWidget {"
-           " background-color: #2a2a3e;"
-           " color: #cdd6f4;"
-           " border: 1px solid #45475a;"
-           " gridline-color: #313244;"
+           " background-color: #ffffff;"
+           " color: #1e1b19;"
+           " border: 1px solid #e8e2d9;"
+           " gridline-color: #f0ebe5;"
            "}"
            "QHeaderView::section {"
-           " background-color: #1e1e2e;"
-           " color: #cdd6f4;"
-           " border: 1px solid #45475a;"
+           " background-color: #f5f0ea;"
+           " color: #84746a;"
+           " border: 1px solid #e8e2d9;"
            " padding: 4px 6px;"
            "}";
 }
@@ -73,17 +73,17 @@ void OrderBookWidget::setupUi() {
     mainLayout->setSpacing(8);
 
     instrumentHeaderLabel_ = new QLabel(instrumentLabelText(Instrument::Rose), this);
-    instrumentHeaderLabel_->setStyleSheet("QLabel { color: #cdd6f4; font-size: 16px; font-weight: 700; }");
+    instrumentHeaderLabel_->setStyleSheet("QLabel { color: #1e1b19; font-size: 16px; font-weight: 700; }");
     mainLayout->addWidget(instrumentHeaderLabel_);
 
     spreadLabel_ = new QLabel("Spread: N/A", this);
-    spreadLabel_->setStyleSheet("QLabel { color: #f9e2af; font-weight: 600; }");
+    spreadLabel_->setStyleSheet("QLabel { color: #c2855a; font-weight: 600; }");
     mainLayout->addWidget(spreadLabel_);
 
     ladderSplitter_ = new QSplitter(Qt::Vertical, this);
     ladderSplitter_->setChildrenCollapsible(false);
     ladderSplitter_->setHandleWidth(2);
-    ladderSplitter_->setStyleSheet("QSplitter::handle { background-color: #585b70; }");
+    ladderSplitter_->setStyleSheet("QSplitter::handle { background-color: #e8e2d9; }");
 
     asksTable_ = new QTableWidget(ladderSplitter_);
     setupLadderTable(asksTable_);
@@ -113,7 +113,7 @@ void OrderBookWidget::setupUi() {
         emit priceClicked(priceItem->data(Qt::UserRole).toDouble(), Side::Buy);
     });
 
-    setStyleSheet("QWidget { background-color: #1e1e2e; }");
+    setStyleSheet("QWidget { background-color: #fff8f5; }");
 }
 
 void OrderBookWidget::setupLadderTable(QTableWidget *table) {
@@ -221,9 +221,9 @@ void OrderBookWidget::renderAsks(const std::vector<PriceLevel> &askLevelsAscendi
 
     asksTable_->setRowCount(static_cast<int>(displayLevels.size()));
 
-    const QColor textColor("#f38ba8");
-    const QColor deepRed("#58253a");
-    const QColor lightRed("#74405a");
+    const QColor textColor("#b84a4a");
+    const QColor deepRed("#f8d7d7");
+    const QColor lightRed("#fdeeee");
     const QFont mono = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
     std::map<double, uint64_t> currentQtyByPrice;
@@ -276,9 +276,9 @@ void OrderBookWidget::renderAsks(const std::vector<PriceLevel> &askLevelsAscendi
 void OrderBookWidget::renderBids(const std::vector<PriceLevel> &bidLevels) {
     bidsTable_->setRowCount(static_cast<int>(bidLevels.size()));
 
-    const QColor textColor("#a6e3a1");
-    const QColor lightGreen("#4a6a53");
-    const QColor deepGreen("#25382a");
+    const QColor textColor("#2d6b4a");
+    const QColor lightGreen("#e8f4ee");
+    const QColor deepGreen("#cde5d4");
     const QFont mono = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
     std::map<double, uint64_t> currentQtyByPrice;

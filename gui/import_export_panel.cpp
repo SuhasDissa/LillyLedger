@@ -223,6 +223,40 @@ void ImportExportPanel::setupUi() {
     mainLayout->addWidget(buildOutputGroup());
     mainLayout->addWidget(buildRunGroup());
     mainLayout->addStretch();
+
+    setStyleSheet(
+        "QWidget { background-color: #fff8f5; color: #1e1b19; }"
+        "QGroupBox {"
+        " border: 1px solid #e8e2d9;"
+        " border-radius: 10px;"
+        " margin-top: 10px;"
+        " font-weight: 700;"
+        "}"
+        "QGroupBox::title {"
+        " subcontrol-origin: margin;"
+        " left: 10px;"
+        " padding: 0 6px;"
+        " color: #52443c;"
+        "}"
+        "QLineEdit, QTableWidget, QProgressBar, QPlainTextEdit {"
+        " background-color: #ffffff;"
+        " border: 1px solid #e8e2d9;"
+        " border-radius: 6px;"
+        " color: #1e1b19;"
+        "}"
+        "QHeaderView::section {"
+        " background-color: #f5f0ea;"
+        " color: #84746a;"
+        " border: 1px solid #e8e2d9;"
+        "}"
+        "QPushButton {"
+        " background-color: #ffffff;"
+        " border: 1px solid #d6c3b7;"
+        " border-radius: 8px;"
+        " color: #52443c;"
+        " padding: 5px 10px;"
+        "}"
+        "QPushButton:hover { background-color: #fdf8f4; }");
 }
 
 QGroupBox *ImportExportPanel::buildInputGroup() {
@@ -290,15 +324,18 @@ QGroupBox *ImportExportPanel::buildRunGroup() {
     runButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     runButton_->setStyleSheet(
         "QPushButton {"
-        " background-color: #89b4fa;"
-        " color: #1e1e2e;"
-        " border: 1px solid #74a6f7;"
+        " background-color: #86522b;"
+        " color: #ffffff;"
+        " border: 1px solid #754624;"
         " border-radius: 8px;"
         " font-weight: 600;"
         "}"
+        "QPushButton:hover {"
+        " background-color: #754624;"
+        "}"
         "QPushButton:disabled {"
-        " background-color: #5c5f77;"
-        " color: #a6adc8;"
+        " background-color: #d6c3b7;"
+        " color: #8a776b;"
         "}");
     layout->addWidget(runButton_);
 
@@ -308,7 +345,7 @@ QGroupBox *ImportExportPanel::buildRunGroup() {
     const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     logView_->setFont(monoFont);
     logView_->setStyleSheet(
-        "QPlainTextEdit { background-color: #1e1e2e; color: #cdd6f4; border: 1px solid #45475a; }");
+        "QPlainTextEdit { background-color: #fdf8f4; color: #52443c; border: 1px solid #e8e2d9; }");
     layout->addWidget(logView_);
 
     clearLogButton_ = new QPushButton("Clear Log", group);
