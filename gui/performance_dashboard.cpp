@@ -31,6 +31,7 @@
 namespace {
 constexpr int kMaxHistoryRuns = 20;
 constexpr int kInstrumentCount = 5;
+constexpr int kTableRowHeight = 36;
 
 QString fixedCharToQString(const char *text, std::size_t maxLen) {
     std::size_t len = 0;
@@ -93,7 +94,10 @@ QLabel *buildLegendSwatch(const QString &hexColor, QWidget *parent) {
 }
 } // namespace
 
-PhaseBreakdownBar::PhaseBreakdownBar(QWidget *parent) : QWidget(parent) { setFixedHeight(40); }
+PhaseBreakdownBar::PhaseBreakdownBar(QWidget *parent) : QWidget(parent) {
+    setMinimumHeight(40);
+    setMaximumHeight(40);
+}
 
 void PhaseBreakdownBar::setStats(const PerfStats &stats) {
     stats_ = stats;
@@ -200,7 +204,7 @@ void PerformanceDashboard::setupUi() {
     emojiLabel->setStyleSheet("QLabel { font-size: 64px; }");
     auto *placeholderText = new QLabel("Run the engine to see performance metrics", placeholderWidget_);
     placeholderText->setAlignment(Qt::AlignCenter);
-    placeholderText->setStyleSheet("QLabel { color: #84746a; font-size: 18px; }");
+    placeholderText->setStyleSheet("QLabel { color: #84746a; font-size: 16px; }");
     placeholderLayout->addWidget(emojiLabel);
     placeholderLayout->addWidget(placeholderText);
     placeholderLayout->addStretch();
@@ -208,10 +212,10 @@ void PerformanceDashboard::setupUi() {
     contentWidget_ = new QWidget(this);
     auto *mainLayout = new QVBoxLayout(contentWidget_);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(10);
+    mainLayout->setSpacing(12);
 
     auto *kpiRow = new QHBoxLayout();
-    kpiRow->setSpacing(10);
+    kpiRow->setSpacing(12);
     kpiRow->addWidget(buildKpiCard("Orders Processed", &ordersValueLabel_, "this run"));
     kpiRow->addWidget(buildKpiCard("Reports Generated", &reportsValueLabel_, "this run"));
     kpiRow->addWidget(buildKpiCard("Throughput", &throughputValueLabel_, "orders/sec"));
@@ -220,7 +224,7 @@ void PerformanceDashboard::setupUi() {
 
     auto *phaseContainer = new QFrame(contentWidget_);
     phaseContainer->setStyleSheet(
-        "QFrame { background-color: #ffffff; border: 1px solid #e8e2d9; border-radius: 8px; }");
+        "QFrame { background-color: #ffffff; border: 1px solid #e8e2d9; border-radius: 10px; }");
     auto *phaseLayout = new QVBoxLayout(phaseContainer);
     phaseLayout->setContentsMargins(10, 10, 10, 10);
     phaseLayout->setSpacing(8);
@@ -228,7 +232,7 @@ void PerformanceDashboard::setupUi() {
     phaseLayout->addWidget(phaseBar_);
 
     auto *legendRow = new QHBoxLayout();
-    legendRow->setSpacing(12);
+    legendRow->setSpacing(16);
 
     auto addLegendItem = [phaseContainer, legendRow](const QString &name, const QString &color,
                                                       QLabel **valueLabel) {
@@ -253,7 +257,7 @@ void PerformanceDashboard::setupUi() {
     mainLayout->addWidget(phaseContainer);
 
     historySeries_ = new QLineSeries(contentWidget_);
-    historySeries_->setColor(QColor("#86522b"));
+    historySeries_->setColor(QColor("#c2855a"));
 
     auto *chart = new QChart();
     chart->legend()->hide();
@@ -288,6 +292,7 @@ void PerformanceDashboard::setupUi() {
     chartView_ = new QChartView(chart, contentWidget_);
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setRubberBand(QChartView::HorizontalRubberBand);
+    chartView_->setMinimumHeight(250);
     chartView_->setStyleSheet("QChartView { background-color: #ffffff; border: 1px solid #e8e2d9; }");
     mainLayout->addWidget(chartView_, 1);
 
@@ -298,15 +303,18 @@ void PerformanceDashboard::setupUi() {
     instrumentTable_->setSelectionMode(QAbstractItemView::NoSelection);
     instrumentTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
     instrumentTable_->verticalHeader()->setVisible(false);
-    instrumentTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    instrumentTable_->setColumnWidth(0, 170);
-    instrumentTable_->setColumnWidth(1, 140);
-    instrumentTable_->setColumnWidth(2, 160);
-    instrumentTable_->setColumnWidth(3, 120);
-    instrumentTable_->setFixedHeight(210);
+    instrumentTable_->setWordWrap(false);
+    instrumentTable_->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
+    auto *instrumentHeader = instrumentTable_->horizontalHeader();
+    instrumentHeader->setMinimumSectionSize(72);
+    instrumentHeader->setSectionResizeMode(0, QHeaderView::Stretch);
+    instrumentHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    instrumentHeader->setSectionResizeMode(2, QHeaderView::Stretch);
+    instrumentHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    instrumentTable_->setMinimumHeight(220);
     instrumentTable_->setStyleSheet(
         "QTableWidget { background-color: #ffffff; color: #1e1b19; border: 1px solid #e8e2d9; }"
-        "QHeaderView::section { background-color: #f5f0ea; color: #52443c; border: 1px solid #e8e2d9; }");
+        "QHeaderView::section { background-color: #f5f0ea; color: #52443c; border: 1px solid #e8e2d9; padding: 8px 10px; }");
     mainLayout->addWidget(instrumentTable_);
 
     stackedLayout_->addWidget(placeholderWidget_);
@@ -325,17 +333,17 @@ QFrame *PerformanceDashboard::buildKpiCard(const QString &title, QLabel **valueL
                                            const QString &subtitle) {
     auto *card = new QFrame(contentWidget_);
     card->setStyleSheet(
-        "QFrame { background-color: #ffffff; border: 1px solid #e8e2d9; border-radius: 4px; }");
+        "QFrame { background-color: #ffffff; border: 1px solid #e8e2d9; border-radius: 10px; }");
 
     auto *layout = new QVBoxLayout(card);
-    layout->setContentsMargins(12, 10, 12, 10);
-    layout->setSpacing(2);
+    layout->setContentsMargins(14, 12, 14, 12);
+    layout->setSpacing(4);
 
     auto *titleLabel = new QLabel(title, card);
-    titleLabel->setStyleSheet("QLabel { color: #84746a; font-size: 12px; }");
+    titleLabel->setStyleSheet("QLabel { color: #84746a; font-size: 12px; font-weight: 600; }");
 
     *valueLabel = new QLabel("0", card);
-    (*valueLabel)->setStyleSheet("QLabel { color: #1e1b19; font-size: 32px; font-weight: 700; }");
+    (*valueLabel)->setStyleSheet("QLabel { color: #1e1b19; font-size: 28px; font-weight: 700; }");
 
     auto *subtitleLabel = new QLabel(subtitle, card);
     subtitleLabel->setStyleSheet("QLabel { color: #84746a; font-size: 11px; }");

@@ -33,6 +33,11 @@
 #include <QtGlobal>
 #include <vector>
 
+namespace {
+constexpr int kControlHeight = 34;
+constexpr int kPreviewRowHeight = 34;
+}
+
 EngineWorker::EngineWorker(QString inputFilePath, QString outputFilePath, QObject *parent)
     : QObject(parent), inputFilePath_(std::move(inputFilePath)),
       outputFilePath_(std::move(outputFilePath)) {}
@@ -225,7 +230,7 @@ void ImportExportPanel::setupUi() {
     mainLayout->addStretch();
 
     setStyleSheet(
-        "QWidget { background-color: #fff8f5; color: #1e1b19; }"
+        "QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
         "QGroupBox {"
         " border: 1px solid #e8e2d9;"
         " border-radius: 10px;"
@@ -244,10 +249,12 @@ void ImportExportPanel::setupUi() {
         " border-radius: 6px;"
         " color: #1e1b19;"
         "}"
+        "QLineEdit { min-height: 34px; padding: 4px 8px; }"
         "QHeaderView::section {"
         " background-color: #f5f0ea;"
         " color: #84746a;"
         " border: 1px solid #e8e2d9;"
+        " padding: 8px 10px;"
         "}"
         "QPushButton {"
         " background-color: #ffffff;"
@@ -255,6 +262,7 @@ void ImportExportPanel::setupUi() {
         " border-radius: 8px;"
         " color: #52443c;"
         " padding: 5px 10px;"
+        " min-height: 34px;"
         "}"
         "QPushButton:hover { background-color: #fdf8f4; }");
 }
@@ -266,8 +274,10 @@ QGroupBox *ImportExportPanel::buildInputGroup() {
     auto *pathLayout = new QHBoxLayout();
     inputPathEdit_ = new QLineEdit(group);
     inputPathEdit_->setReadOnly(true);
+    inputPathEdit_->setMinimumHeight(kControlHeight);
     inputPathEdit_->setPlaceholderText("No file selected");
     inputBrowseButton_ = new QPushButton("Browse…", group);
+    inputBrowseButton_->setMinimumHeight(kControlHeight);
     pathLayout->addWidget(inputPathEdit_);
     pathLayout->addWidget(inputBrowseButton_);
     layout->addLayout(pathLayout);
@@ -278,8 +288,16 @@ QGroupBox *ImportExportPanel::buildInputGroup() {
         {"Client Order ID", "Instrument", "Side", "Qty", "Price"});
     previewTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
     previewTable_->setSelectionMode(QAbstractItemView::NoSelection);
+    previewTable_->setWordWrap(false);
     previewTable_->verticalHeader()->setVisible(false);
-    previewTable_->horizontalHeader()->setStretchLastSection(true);
+    previewTable_->verticalHeader()->setDefaultSectionSize(kPreviewRowHeight);
+    auto *previewHeader = previewTable_->horizontalHeader();
+    previewHeader->setMinimumSectionSize(56);
+    previewHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(4, QHeaderView::Stretch);
     layout->addWidget(previewTable_);
 
     rowCountLabel_ = new QLabel("0 rows detected", group);
@@ -297,8 +315,10 @@ QGroupBox *ImportExportPanel::buildOutputGroup() {
     auto *pathLayout = new QHBoxLayout();
     outputPathEdit_ = new QLineEdit(group);
     outputPathEdit_->setReadOnly(true);
+    outputPathEdit_->setMinimumHeight(kControlHeight);
     outputPathEdit_->setPlaceholderText("Auto-generated alongside input");
     outputBrowseButton_ = new QPushButton("Browse…", group);
+    outputBrowseButton_->setMinimumHeight(kControlHeight);
     pathLayout->addWidget(outputPathEdit_);
     pathLayout->addWidget(outputBrowseButton_);
     layout->addLayout(pathLayout);
@@ -341,7 +361,7 @@ QGroupBox *ImportExportPanel::buildRunGroup() {
 
     logView_ = new QPlainTextEdit(group);
     logView_->setReadOnly(true);
-    logView_->setFixedHeight(150);
+    logView_->setMinimumHeight(160);
     const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     logView_->setFont(monoFont);
     logView_->setStyleSheet(

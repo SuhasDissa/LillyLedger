@@ -20,6 +20,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
+#include <QStyle>
 #include <QTableWidget>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -35,6 +36,11 @@ constexpr int kPageOrderBook = 0;
 constexpr int kPageExecutionReports = 1;
 constexpr int kPageManualEntry = 2;
 constexpr int kPagePerformance = 3;
+constexpr int kSidebarWidth = 220;
+constexpr int kTopBarHeight = 64;
+constexpr int kBottomBarHeight = 60;
+constexpr int kPageMargin = 24;
+constexpr int kTableRowHeight = 44;
 
 QColor rowBackgroundForStatus(Status status) {
     switch (status) {
@@ -91,7 +97,8 @@ void buildSyntheticBookFromReports(const std::vector<ExecutionReport> &reports,
         entry.order.side = report.side;
         entry.remainingQty = report.quantity;
         entry.seqNum = seqNum++;
-        std::memcpy(entry.order.clientOrderId, report.clientOrderId, sizeof(entry.order.clientOrderId));
+        std::memcpy(entry.order.clientOrderId, report.clientOrderId,
+                    sizeof(entry.order.clientOrderId));
         std::memcpy(entry.orderId, report.orderId, sizeof(entry.orderId));
 
         if (report.side == Side::Buy) {
@@ -160,7 +167,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
 void MainWindow::setupSidebar() {
     sidebarWidget_ = new QWidget(this);
-    sidebarWidget_->setFixedWidth(200);
+    sidebarWidget_->setFixedWidth(kSidebarWidth);
     sidebarWidget_->setObjectName("Sidebar");
 
     auto *layout = new QVBoxLayout(sidebarWidget_);
@@ -189,10 +196,10 @@ void MainWindow::setupSidebar() {
         return btn;
     };
 
-    sidebarInstrumentsButton_ = createNavBtn("eco  Instruments", false);
-    sidebarAnalyticsButton_ = createNavBtn("monitoring  Analytics", true);
-    sidebarManualButton_ = createNavBtn("potted_plant  Manual Entry", false);
-    sidebarPerformanceButton_ = createNavBtn("settings  Performance", false);
+    sidebarInstrumentsButton_ = createNavBtn("Instruments", false);
+    sidebarAnalyticsButton_ = createNavBtn("Analytics", true);
+    sidebarManualButton_ = createNavBtn("Manual Entry", false);
+    sidebarPerformanceButton_ = createNavBtn("Performance", false);
 
     layout->addWidget(sidebarInstrumentsButton_);
     layout->addWidget(sidebarAnalyticsButton_);
@@ -200,7 +207,7 @@ void MainWindow::setupSidebar() {
     layout->addWidget(sidebarPerformanceButton_);
 
     layout->addStretch();
-    sidebarSupportButton_ = createNavBtn("help  Support", false);
+    sidebarSupportButton_ = createNavBtn("Support", false);
     layout->addWidget(sidebarSupportButton_);
 
     connect(sidebarInstrumentsButton_, &QPushButton::clicked, this,
@@ -222,7 +229,7 @@ void MainWindow::setupSidebar() {
 
 void MainWindow::setupTopBar() {
     topBarWidget_ = new QWidget(this);
-    topBarWidget_->setFixedHeight(64);
+    topBarWidget_->setFixedHeight(kTopBarHeight);
     topBarWidget_->setObjectName("TopBar");
 
     auto *layout = new QHBoxLayout(topBarWidget_);
@@ -288,7 +295,7 @@ void MainWindow::setupCentralArea() {
 
     auto *orderBookTab = new QWidget(stackedWidget_);
     auto *orderBookLayout = new QVBoxLayout(orderBookTab);
-    orderBookLayout->setContentsMargins(24, 24, 24, 24);
+    orderBookLayout->setContentsMargins(kPageMargin, kPageMargin, kPageMargin, kPageMargin);
     orderBookLayout->setSpacing(12);
 
     auto *orderHeader = new QWidget(orderBookTab);
@@ -331,7 +338,7 @@ void MainWindow::setupCentralArea() {
 
     auto *headerWidget = new QWidget(reportsTab);
     headerWidget->setObjectName("PageHeader");
-    headerWidget->setFixedHeight(88);
+    headerWidget->setMinimumHeight(88);
     auto *headerLayout = new QHBoxLayout(headerWidget);
     headerLayout->setContentsMargins(32, 24, 32, 24);
 
@@ -361,7 +368,7 @@ void MainWindow::setupCentralArea() {
 
     auto *filterBar = new QWidget(reportsTab);
     filterBar->setObjectName("FilterBar");
-    filterBar->setFixedHeight(48);
+    filterBar->setMinimumHeight(52);
     auto *filterLayout = new QHBoxLayout(filterBar);
     filterLayout->setContentsMargins(32, 0, 32, 0);
     filterLayout->setSpacing(12);
@@ -404,7 +411,7 @@ void MainWindow::setupCentralArea() {
 
     auto *tableContainer = new QWidget(reportsTab);
     auto *tableLayout = new QVBoxLayout(tableContainer);
-    tableLayout->setContentsMargins(32, 32, 32, 32);
+    tableLayout->setContentsMargins(kPageMargin, kPageMargin, kPageMargin, kPageMargin);
 
     auto *tableWrapper = new QWidget(tableContainer);
     tableWrapper->setObjectName("TableWrapper");
@@ -414,33 +421,38 @@ void MainWindow::setupCentralArea() {
 
     executionReportsTable_ = new QTableWidget(tableWrapper);
     executionReportsTable_->setColumnCount(9);
-    executionReportsTable_->setHorizontalHeaderLabels(
-        {"Client ID", "Order ID", "Instrument", "Side", "Price", "Qty", "Status", "Reason",
-         "Time"});
+    executionReportsTable_->setHorizontalHeaderLabels({"Client ID", "Order ID", "Instrument",
+                                                       "Side", "Price", "Qty", "Status", "Reason",
+                                                       "Time"});
     executionReportsTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
     executionReportsTable_->setSelectionBehavior(QAbstractItemView::SelectRows);
     executionReportsTable_->setSelectionMode(QAbstractItemView::SingleSelection);
     executionReportsTable_->setShowGrid(false);
     executionReportsTable_->setAlternatingRowColors(false);
+    executionReportsTable_->setWordWrap(false);
+    executionReportsTable_->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     executionReportsTable_->verticalHeader()->setVisible(false);
+    executionReportsTable_->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
+    executionReportsTable_->verticalHeader()->setMinimumSectionSize(kTableRowHeight);
     executionReportsTable_->horizontalHeader()->setStretchLastSection(true);
     executionReportsTable_->horizontalHeader()->setHighlightSections(false);
-
-    executionReportsTable_->setColumnWidth(0, 120);
-    executionReportsTable_->setColumnWidth(1, 110);
-    executionReportsTable_->setColumnWidth(2, 140);
-    executionReportsTable_->setColumnWidth(3, 80);
-    executionReportsTable_->setColumnWidth(4, 90);
-    executionReportsTable_->setColumnWidth(5, 90);
-    executionReportsTable_->setColumnWidth(6, 90);
-    executionReportsTable_->setColumnWidth(7, 240);
-    executionReportsTable_->setColumnWidth(8, 110);
+    auto *reportsHeader = executionReportsTable_->horizontalHeader();
+    reportsHeader->setMinimumSectionSize(56);
+    reportsHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(5, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+    reportsHeader->setSectionResizeMode(7, QHeaderView::Stretch);
+    reportsHeader->setSectionResizeMode(8, QHeaderView::ResizeToContents);
 
     wrapperLayout->addWidget(executionReportsTable_);
 
     auto *tableSummary = new QWidget(tableWrapper);
     tableSummary->setObjectName("TableSummary");
-    tableSummary->setFixedHeight(52);
+    tableSummary->setMinimumHeight(52);
     auto *summaryLayout = new QHBoxLayout(tableSummary);
     summaryLayout->setContentsMargins(32, 0, 32, 0);
 
@@ -466,9 +478,11 @@ void MainWindow::setupCentralArea() {
         auto *titleLabel = new QLabel(title, container);
         titleLabel->setObjectName("SummaryLabel");
         *valueLabel = new QLabel("0 ●", container);
-        (*valueLabel)->setStyleSheet(
-            QString("font-weight: 600; font-size: 12px; font-family: 'IBM Plex Mono'; color: %1;")
-                .arg(color));
+        (*valueLabel)
+            ->setStyleSheet(
+                QString(
+                    "font-weight: 600; font-size: 12px; font-family: 'IBM Plex Mono'; color: %1;")
+                    .arg(color));
 
         containerLayout->addWidget(titleLabel);
         containerLayout->addWidget(*valueLabel);
@@ -513,26 +527,23 @@ void MainWindow::setupCentralArea() {
 
 void MainWindow::setupBottomBar() {
     bottomBarWidget_ = new QWidget(this);
-    bottomBarWidget_->setFixedHeight(60);
+    bottomBarWidget_->setFixedHeight(kBottomBarHeight);
     bottomBarWidget_->setObjectName("BottomBar");
 
     auto *layout = new QHBoxLayout(bottomBarWidget_);
     layout->setContentsMargins(28, 0, 28, 0);
     layout->setSpacing(24);
 
-    auto createBottomValueLabel = [this](const QString &color) {
+    auto createBottomValueLabel = [this](const QString &objectName) {
         auto *label = new QLabel(this);
-        label->setStyleSheet(
-            QString("font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; "
-                    "color: %1;")
-                .arg(color));
+        label->setObjectName(objectName);
         return label;
     };
 
-    ordersProcessedValue_ = createBottomValueLabel("#84746a");
-    reportsGeneratedValue_ = createBottomValueLabel("#2c694d");
-    lastRunDurationValue_ = createBottomValueLabel("#84746a");
-    engineStateValue_ = createBottomValueLabel("#2c694d");
+    ordersProcessedValue_ = createBottomValueLabel("BottomMetricMuted");
+    reportsGeneratedValue_ = createBottomValueLabel("BottomMetricPositive");
+    lastRunDurationValue_ = createBottomValueLabel("BottomMetricMuted");
+    engineStateValue_ = createBottomValueLabel("BottomMetricState");
 
     layout->addWidget(ordersProcessedValue_);
     layout->addStretch();
@@ -546,6 +557,15 @@ void MainWindow::setupBottomBar() {
 void MainWindow::applyLightTheme() {
     qApp->setStyleSheet(R"(
         QMainWindow { background-color: #fff8f5; }
+        QWidget { font-size: 12px; }
+        QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
+            min-height: 34px;
+            font-size: 12px;
+        }
+        QPushButton {
+            min-height: 34px;
+            font-size: 12px;
+        }
 
         #Sidebar { background-color: #1c1917; }
         #Logo { color: #c2855a; font-family: 'Newsreader'; font-size: 24px; font-style: italic; font-weight: 400; }
@@ -563,7 +583,8 @@ void MainWindow::applyLightTheme() {
         #TopBar { background-color: #ffffff; border-bottom: 1px solid #e8e2d9; }
         #TopTabBtn {
             border: none; border-bottom: 2px solid transparent; background: transparent;
-            color: #84746a; font-weight: 500; font-size: 14px; padding: 22px 0px 18px 0px; margin-top: 4px;
+            color: #84746a; font-weight: 500; font-size: 13px; padding: 22px 0px 18px 0px; margin-top: 4px;
+            min-height: 0px;
         }
         #TopTabBtn:hover { color: #86522b; }
         #TopTabBtn:checked { color: #86522b; border-bottom: 2px solid #86522b; font-weight: 600; }
@@ -587,18 +608,32 @@ void MainWindow::applyLightTheme() {
         #FilterBar { background-color: #faf2ee; }
         QComboBox {
             background-color: #ffffff; border: 1px solid #e8e2d9; border-radius: 12px;
-            padding: 4px 12px; color: #52443c; font-weight: 600; font-size: 11px;
+            padding: 4px 12px; color: #52443c; font-weight: 600; font-size: 12px; min-height: 34px;
+        }
+        QComboBox::drop-down {
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 18px;
+            border-left: 1px solid #e8e2d9;
+        }
+        QComboBox QAbstractItemView {
+            background-color: #ffffff;
+            color: #52443c;
+            border: 1px solid #e8e2d9;
+            selection-background-color: #f5f0ea;
+            selection-color: #1e1b19;
+            outline: 0px;
         }
         #ResultsLabel { color: #84746a; font-weight: 500; font-size: 11px; }
 
         #TableWrapper { background-color: #ffffff; border: 1px solid #f0ebe5; border-radius: 12px; }
         QTableWidget { border: none; background-color: transparent; }
         QHeaderView::section {
-            background-color: #f5f0ea; color: #d6c3b7; border: none; border-bottom: 1px solid #e8e2d9;
-            padding: 12px 16px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            background-color: #f5f0ea; color: #84746a; border: none; border-bottom: 1px solid #e8e2d9;
+            padding: 10px 12px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
         }
         QTableWidget::item {
-            padding: 8px 16px; border-bottom: 1px solid #e8e2d9;
+            padding: 6px 12px; border-bottom: 1px solid #e8e2d9;
         }
 
         #TableSummary { background-color: #ffffff; border-top: 1px solid #e8e2d9; }
@@ -606,6 +641,14 @@ void MainWindow::applyLightTheme() {
         #SummaryValue { color: #1e1b19; font-weight: 600; font-family: 'IBM Plex Mono'; font-size: 14px; }
 
         #BottomBar { background-color: #ffffff; border-top: 1px solid #e8e2d9; }
+        #BottomMetricMuted, #BottomMetricPositive, #BottomMetricState {
+            font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        #BottomMetricMuted { color: #84746a; }
+        #BottomMetricPositive { color: #2c694d; }
+        #BottomMetricState[engineState="idle"] { color: #2c694d; }
+        #BottomMetricState[engineState="running"] { color: #c2855a; }
+        #BottomMetricState[engineState="error"] { color: #a33b3c; }
     )");
 }
 
@@ -615,22 +658,25 @@ void MainWindow::setLedState(LedState state) {
     }
 
     if (state == LedState::Running) {
-        engineStateValue_->setStyleSheet(
-            "font-weight: 700; font-size: 10px; color: #c2855a; letter-spacing: 1px;");
-        engineStateValue_->setText("● STATUS RUNNING");
+        engineStateValue_->setProperty("engineState", "running");
+        engineStateValue_->setText("STATUS RUNNING");
+        engineStateValue_->style()->unpolish(engineStateValue_);
+        engineStateValue_->style()->polish(engineStateValue_);
         return;
     }
 
     if (state == LedState::Error) {
-        engineStateValue_->setStyleSheet(
-            "font-weight: 700; font-size: 10px; color: #a33b3c; letter-spacing: 1px;");
-        engineStateValue_->setText("● STATUS ERROR");
+        engineStateValue_->setProperty("engineState", "error");
+        engineStateValue_->setText("STATUS ERROR");
+        engineStateValue_->style()->unpolish(engineStateValue_);
+        engineStateValue_->style()->polish(engineStateValue_);
         return;
     }
 
-    engineStateValue_->setStyleSheet(
-        "font-weight: 700; font-size: 10px; color: #2c694d; letter-spacing: 1px;");
-    engineStateValue_->setText("● STATUS IDLE");
+    engineStateValue_->setProperty("engineState", "idle");
+    engineStateValue_->setText("STATUS IDLE");
+    engineStateValue_->style()->unpolish(engineStateValue_);
+    engineStateValue_->style()->polish(engineStateValue_);
 }
 
 void MainWindow::refreshUiState() {
@@ -646,23 +692,25 @@ void MainWindow::refreshUiState() {
         if (totalReports == 0) {
             reportsSubtitleLabel_->setText("No reports yet");
         } else {
-            reportsSubtitleLabel_->setText(QString("%1 records from last engine run").arg(totalReports));
+            reportsSubtitleLabel_->setText(
+                QString("%1 records from last engine run").arg(totalReports));
         }
     }
 
     if (ordersProcessedValue_ != nullptr) {
         ordersProcessedValue_->setText(
-            QString("list_alt  Orders Processed: %1").arg(QLocale().toString(ordersProcessed_)));
+            QString("Orders Processed: %1").arg(QLocale().toString(ordersProcessed_)));
     }
     if (reportsGeneratedValue_ != nullptr) {
         reportsGeneratedValue_->setText(
-            QString("description  Reports Generated: %1").arg(QLocale().toString(totalReports)));
+            QString("Reports Generated: %1").arg(QLocale().toString(totalReports)));
     }
     if (lastRunDurationValue_ != nullptr) {
-        lastRunDurationValue_->setText(QString("sync  Cycle: %1 ms").arg(lastRunDurationMs_));
+        lastRunDurationValue_->setText(QString("Cycle: %1 ms").arg(lastRunDurationMs_));
     }
 
-    const int shownRows = executionReportsTable_ != nullptr ? executionReportsTable_->rowCount() : totalReports;
+    const int shownRows =
+        executionReportsTable_ != nullptr ? executionReportsTable_->rowCount() : totalReports;
     updateSummaryBar(shownRows);
 }
 
@@ -718,7 +766,8 @@ void MainWindow::updateExecutionReportsTable() {
 
     const int instrumentFilterValue =
         instrumentFilter_ != nullptr ? instrumentFilter_->currentData().toInt() : -1;
-    const int statusFilterValue = statusFilter_ != nullptr ? statusFilter_->currentData().toInt() : -1;
+    const int statusFilterValue =
+        statusFilter_ != nullptr ? statusFilter_->currentData().toInt() : -1;
     const int sideFilterValue = sideFilter_ != nullptr ? sideFilter_->currentData().toInt() : -1;
 
     std::vector<const ExecutionReport *> filteredReports;
@@ -764,9 +813,9 @@ void MainWindow::updateExecutionReportsTable() {
         const QColor rowBg = rowBackgroundForStatus(report.status);
         const QColor statusColor = rowStatusColor(report.status);
 
-        std::array<QTableWidgetItem *, 9> rowItems = {clientItem, orderItem,   instrumentItem,
-                                                       sideItem,   priceItem,   qtyItem,
-                                                       statusItem, reasonItem,  timeItem};
+        std::array<QTableWidgetItem *, 9> rowItems = {clientItem, orderItem,  instrumentItem,
+                                                      sideItem,   priceItem,  qtyItem,
+                                                      statusItem, reasonItem, timeItem};
 
         for (QTableWidgetItem *item : rowItems) {
             item->setBackground(rowBg);
@@ -777,8 +826,8 @@ void MainWindow::updateExecutionReportsTable() {
         sideItem->setForeground(sideForeground(report.side));
 
         statusItem->setForeground(statusColor);
-        statusItem->setFont(QFont(statusItem->font().family(), statusItem->font().pointSize(),
-                                  QFont::DemiBold));
+        statusItem->setFont(
+            QFont(statusItem->font().family(), statusItem->font().pointSize(), QFont::DemiBold));
 
         executionReportsTable_->setItem(row, 0, clientItem);
         executionReportsTable_->setItem(row, 1, orderItem);
@@ -789,7 +838,6 @@ void MainWindow::updateExecutionReportsTable() {
         executionReportsTable_->setItem(row, 6, statusItem);
         executionReportsTable_->setItem(row, 7, reasonItem);
         executionReportsTable_->setItem(row, 8, timeItem);
-        executionReportsTable_->setRowHeight(row, 48);
     }
 
     updateSummaryBar(static_cast<int>(filteredReports.size()));
@@ -916,9 +964,8 @@ void MainWindow::runEngine() {
     }
     const auto matchEnd = std::chrono::steady_clock::now();
 
-    const bool fileOpenError =
-        parseResults.size() == 1 && !parseResults.front().ok &&
-        parseResults.front().reason == "Failed to open input file";
+    const bool fileOpenError = parseResults.size() == 1 && !parseResults.front().ok &&
+                               parseResults.front().reason == "Failed to open input file";
 
     executionReports_ = std::move(reports);
     ordersProcessed_ = parseResults.size();
@@ -937,8 +984,9 @@ void MainWindow::runEngine() {
     refreshUiState();
 
     if (fileOpenError) {
-        QMessageBox::critical(this, "Run Engine",
-                              "Failed to open the selected input file. Check the path and try again.");
+        QMessageBox::critical(
+            this, "Run Engine",
+            "Failed to open the selected input file. Check the path and try again.");
     }
 }
 

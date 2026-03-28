@@ -23,6 +23,7 @@ constexpr int kPriceColumn = 0;
 constexpr int kQtyColumn = 1;
 constexpr int kOrdersColumn = 2;
 constexpr int kCumQtyColumn = 3;
+constexpr int kTableRowHeight = 34;
 
 class AnimatedBookItem : public QObject, public QTableWidgetItem {
     Q_OBJECT
@@ -48,7 +49,7 @@ QString sideTableStyle() {
            " background-color: #f5f0ea;"
            " color: #84746a;"
            " border: 1px solid #e8e2d9;"
-           " padding: 4px 6px;"
+           " padding: 8px 10px;"
            "}";
 }
 } // namespace
@@ -69,11 +70,12 @@ void OrderBookWidget::updateBook(const std::vector<BookEntry> &buys,
 
 void OrderBookWidget::setupUi() {
     auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(8, 8, 8, 8);
-    mainLayout->setSpacing(8);
+    mainLayout->setContentsMargins(12, 12, 12, 12);
+    mainLayout->setSpacing(10);
 
     instrumentHeaderLabel_ = new QLabel(instrumentLabelText(Instrument::Rose), this);
-    instrumentHeaderLabel_->setStyleSheet("QLabel { color: #1e1b19; font-size: 16px; font-weight: 700; }");
+    instrumentHeaderLabel_->setStyleSheet(
+        "QLabel { color: #1e1b19; font-size: 18px; font-weight: 700; }");
     mainLayout->addWidget(instrumentHeaderLabel_);
 
     spreadLabel_ = new QLabel("Spread: N/A", this);
@@ -119,17 +121,27 @@ void OrderBookWidget::setupUi() {
 void OrderBookWidget::setupLadderTable(QTableWidget *table) {
     table->setColumnCount(4);
     table->setHorizontalHeaderLabels({"Price", "Qty", "Orders", "Cumulative Qty"});
+    QFont tableFont = table->font();
+    tableFont.setPointSize(11);
+    table->setFont(tableFont);
     table->setSelectionMode(QAbstractItemView::NoSelection);
     table->setSelectionBehavior(QAbstractItemView::SelectRows);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setFocusPolicy(Qt::NoFocus);
     table->setAlternatingRowColors(false);
+    table->setWordWrap(false);
+    table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    table->setShowGrid(false);
     table->verticalHeader()->setVisible(false);
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    table->setColumnWidth(kPriceColumn, 100);
-    table->setColumnWidth(kQtyColumn, 80);
-    table->setColumnWidth(kOrdersColumn, 60);
-    table->setColumnWidth(kCumQtyColumn, 110);
+    table->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
+    table->verticalHeader()->setMinimumSectionSize(kTableRowHeight);
+    auto *header = table->horizontalHeader();
+    header->setMinimumSectionSize(56);
+    header->setSectionResizeMode(kPriceColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kOrdersColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kCumQtyColumn, QHeaderView::Stretch);
+    table->horizontalHeader()->setFixedHeight(32);
     table->setStyleSheet(sideTableStyle());
 }
 

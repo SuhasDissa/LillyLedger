@@ -21,8 +21,8 @@
 
 BuySellToggle::BuySellToggle(QWidget *parent) : QWidget(parent) {
     auto *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(2, 2, 2, 2);
-    layout->setSpacing(2);
+    layout->setContentsMargins(3, 3, 3, 3);
+    layout->setSpacing(3);
 
     buyButton_ = new QPushButton("BUY", this);
     sellButton_ = new QPushButton("SELL", this);
@@ -31,13 +31,14 @@ BuySellToggle::BuySellToggle(QWidget *parent) : QWidget(parent) {
     sellButton_->setCheckable(true);
     buyButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     sellButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    buyButton_->setMinimumHeight(30);
-    sellButton_->setMinimumHeight(30);
+    buyButton_->setMinimumHeight(34);
+    sellButton_->setMinimumHeight(34);
 
     layout->addWidget(buyButton_);
     layout->addWidget(sellButton_);
 
-    setStyleSheet("BuySellToggle { background-color: #f5f0ea; border: 1px solid #d6c3b7; border-radius: 8px; }");
+    setStyleSheet(
+        "BuySellToggle { background-color: #f5f0ea; border: 1px solid #d6c3b7; border-radius: 10px; }");
 
     connect(buyButton_, &QPushButton::clicked, this, [this]() { setSide(Side::Buy); });
     connect(sellButton_, &QPushButton::clicked, this, [this]() { setSide(Side::Sell); });
@@ -118,14 +119,15 @@ void ManualOrderEntryWidget::onResetClicked() { resetForm(); }
 void ManualOrderEntryWidget::setupUi() {
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(8);
+    mainLayout->setSpacing(12);
 
     orderGroup_ = new QGroupBox("New Order", this);
+    orderGroup_->setMaximumWidth(760);
     auto *formLayout = new QFormLayout(orderGroup_);
     formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
     formLayout->setFormAlignment(Qt::AlignTop);
-    formLayout->setHorizontalSpacing(10);
-    formLayout->setVerticalSpacing(8);
+    formLayout->setHorizontalSpacing(12);
+    formLayout->setVerticalSpacing(10);
 
     clientIdEdit_ = new QLineEdit(orderGroup_);
     clientIdEdit_->setMaxLength(7);
@@ -184,7 +186,7 @@ void ManualOrderEntryWidget::setupUi() {
     submitLayout->setSpacing(6);
 
     submitButton_ = new QPushButton("Submit Order", submitContainer);
-    submitButton_->setMinimumHeight(40);
+    submitButton_->setMinimumHeight(44);
     submitButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     submitButton_->setStyleSheet(
         "QPushButton { background-color: #86522b; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; }"
@@ -192,7 +194,7 @@ void ManualOrderEntryWidget::setupUi() {
         "QPushButton:pressed { background-color: #653b1f; }");
 
     resetButton_ = new QPushButton("Reset", submitContainer);
-    resetButton_->setMinimumHeight(32);
+    resetButton_->setMinimumHeight(36);
     resetButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     resetButton_->setStyleSheet(
         "QPushButton { background-color: #ffffff; color: #52443c; border: 1px solid #d6c3b7; border-radius: 8px; }");
@@ -210,18 +212,32 @@ void ManualOrderEntryWidget::setupUi() {
     submitLayout->addWidget(successLabel_);
     formLayout->addRow(QString(), submitContainer);
 
-    mainLayout->addWidget(orderGroup_);
+    mainLayout->addWidget(orderGroup_, 0, Qt::AlignTop | Qt::AlignLeft);
     mainLayout->addStretch();
 
     successHoldTimer_ = new QTimer(this);
     successHoldTimer_->setSingleShot(true);
 
     setStyleSheet(
-        "QWidget { background-color: #fff8f5; color: #1e1b19; }"
-        "QGroupBox { border: 1px solid #e8e2d9; border-radius: 10px; margin-top: 10px; font-weight: 700; }"
-        "QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px 0 4px; }"
+        "QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
+        "QGroupBox { border: 1px solid #e8e2d9; border-radius: 12px; margin-top: 12px; font-weight: 700; }"
+        "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; }"
         "QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {"
-        " background-color: #ffffff; color: #1e1b19; border: 1px solid #d6c3b7; border-radius: 6px; padding: 4px 6px; }"
+        " background-color: #ffffff; color: #1e1b19; border: 1px solid #d6c3b7; border-radius: 8px; padding: 4px 8px; min-height: 34px; }"
+        "QComboBox::drop-down {"
+        " subcontrol-origin: padding;"
+        " subcontrol-position: top right;"
+        " width: 18px;"
+        " border-left: 1px solid #d6c3b7;"
+        "}"
+        "QComboBox QAbstractItemView {"
+        " background-color: #ffffff;"
+        " color: #52443c;"
+        " border: 1px solid #e8e2d9;"
+        " selection-background-color: #f5f0ea;"
+        " selection-color: #1e1b19;"
+        " outline: 0px;"
+        "}"
         "QLineEdit[error=\"true\"], QComboBox[error=\"true\"], QSpinBox[error=\"true\"], QDoubleSpinBox[error=\"true\"], BuySellToggle[error=\"true\"] {"
         " border: 1px solid #b84a4a; }");
 }

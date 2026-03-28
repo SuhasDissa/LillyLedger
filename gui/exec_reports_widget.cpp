@@ -39,6 +39,8 @@ constexpr int kQtyColumn = 6;
 constexpr int kStatusColumn = 7;
 constexpr int kReasonColumn = 8;
 constexpr int kColumnCount = 9;
+constexpr int kControlHeight = 34;
+constexpr int kTableRowHeight = 42;
 
 constexpr int kAnyFilterValue = -1;
 
@@ -568,10 +570,22 @@ void ExecutionReportsWidget::setupUi() {
     searchEdit_ = new QLineEdit(this);
     searchEdit_->setPlaceholderText("Search order ID…");
 
+    instrumentFilter_->setMinimumWidth(170);
+    statusFilter_->setMinimumWidth(150);
+    sideFilter_->setMinimumWidth(120);
+    searchEdit_->setMinimumWidth(200);
+    instrumentFilter_->setMinimumHeight(kControlHeight);
+    statusFilter_->setMinimumHeight(kControlHeight);
+    sideFilter_->setMinimumHeight(kControlHeight);
+    searchEdit_->setMinimumHeight(kControlHeight);
+
     clearFiltersButton_ = new QPushButton("Clear Filters", this);
     exportButton_ = new QPushButton("Export CSV", this);
     showingLabel_ = new QLabel("Showing 0 / 0 reports", this);
     showingLabel_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    showingLabel_->setMinimumWidth(190);
+    clearFiltersButton_->setMinimumHeight(kControlHeight);
+    exportButton_->setMinimumHeight(kControlHeight);
 
     filterRow->addWidget(instrumentFilter_);
     filterRow->addWidget(statusFilter_);
@@ -590,17 +604,22 @@ void ExecutionReportsWidget::setupUi() {
     tableView_->setSelectionBehavior(QAbstractItemView::SelectRows);
     tableView_->setSelectionMode(QAbstractItemView::SingleSelection);
     tableView_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tableView_->setWordWrap(false);
+    tableView_->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    tableView_->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
+    tableView_->verticalHeader()->setMinimumSectionSize(kTableRowHeight);
     tableView_->verticalHeader()->setVisible(false);
-    tableView_->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    tableView_->setColumnWidth(kTimestampColumn, 140);
-    tableView_->setColumnWidth(kClientIdColumn, 80);
-    tableView_->setColumnWidth(kOrderIdColumn, 80);
-    tableView_->setColumnWidth(kInstrumentColumn, 90);
-    tableView_->setColumnWidth(kSideColumn, 60);
-    tableView_->setColumnWidth(kPriceColumn, 80);
-    tableView_->setColumnWidth(kQtyColumn, 60);
-    tableView_->setColumnWidth(kStatusColumn, 80);
-    tableView_->setColumnWidth(kReasonColumn, 200);
+    auto *header = tableView_->horizontalHeader();
+    header->setMinimumSectionSize(56);
+    header->setSectionResizeMode(kTimestampColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kClientIdColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kOrderIdColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kInstrumentColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kSideColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kPriceColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kStatusColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kReasonColumn, QHeaderView::Stretch);
     tableView_->setAlternatingRowColors(false);
     tableView_->setStyleSheet(
         "QTableView {"
@@ -613,7 +632,7 @@ void ExecutionReportsWidget::setupUi() {
         " background-color: #f5f0ea;"
         " color: #84746a;"
         " border: 1px solid #e8e2d9;"
-        " padding: 4px 6px;"
+        " padding: 8px 10px;"
         "}");
     mainLayout->addWidget(tableView_, 1);
 
@@ -663,13 +682,28 @@ void ExecutionReportsWidget::setupUi() {
             &ExecutionReportsWidget::handleTableDoubleClick);
 
     setStyleSheet(
-        "QWidget { background-color: #fff8f5; color: #1e1b19; }"
+        "QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
         "QComboBox, QLineEdit {"
         " background-color: #ffffff;"
         " border: 1px solid #e8e2d9;"
         " border-radius: 10px;"
         " padding: 4px 8px;"
+        " min-height: 34px;"
         " color: #52443c;"
+        "}"
+        "QComboBox::drop-down {"
+        " subcontrol-origin: padding;"
+        " subcontrol-position: top right;"
+        " width: 18px;"
+        " border-left: 1px solid #e8e2d9;"
+        "}"
+        "QComboBox QAbstractItemView {"
+        " background-color: #ffffff;"
+        " color: #52443c;"
+        " border: 1px solid #e8e2d9;"
+        " selection-background-color: #f5f0ea;"
+        " selection-color: #1e1b19;"
+        " outline: 0px;"
         "}"
         "QPushButton {"
         " background-color: #ffffff;"
@@ -677,6 +711,7 @@ void ExecutionReportsWidget::setupUi() {
         " border-radius: 8px;"
         " color: #52443c;"
         " padding: 5px 10px;"
+        " min-height: 34px;"
         "}"
         "QPushButton:hover { background-color: #fdf8f4; }"
         "QLabel { color: #52443c; }");
