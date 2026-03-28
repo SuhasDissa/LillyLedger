@@ -392,13 +392,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
     ui_->executionReportsTable->horizontalHeader()->setHighlightSections(false);
     auto *reportsHeader = ui_->executionReportsTable->horizontalHeader();
     reportsHeader->setMinimumSectionSize(56);
-    reportsHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    reportsHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    reportsHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    reportsHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-    reportsHeader->setSectionResizeMode(4, QHeaderView::ResizeToContents);
-    reportsHeader->setSectionResizeMode(5, QHeaderView::ResizeToContents);
-    reportsHeader->setSectionResizeMode(6, QHeaderView::Stretch);
+    for (int i = 0; i <= 6; ++i) {
+        reportsHeader->setSectionResizeMode(i, QHeaderView::Stretch);
+    }
 
     // Sidebar nav connections
     connect(ui_->sidebarInstrumentsButton, &QPushButton::clicked, this,
