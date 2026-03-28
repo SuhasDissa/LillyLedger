@@ -48,9 +48,9 @@
      <widget class="QWidget" name="contentWidget">
       <layout class="QVBoxLayout" name="contentLayout">
        <property name="leftMargin"><number>24</number></property>
-       <property name="topMargin"><number>20</number></property>
+       <property name="topMargin"><number>24</number></property>
        <property name="rightMargin"><number>24</number></property>
-       <property name="bottomMargin"><number>20</number></property>
+       <property name="bottomMargin"><number>24</number></property>
        <property name="spacing"><number>16</number></property>
        <!-- KPI row -->
        <item>
@@ -175,10 +175,10 @@
         <widget class="QFrame" name="phaseContainer">
          <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
          <layout class="QVBoxLayout" name="phaseLayout">
-          <property name="leftMargin"><number>16</number></property>
-          <property name="topMargin"><number>14</number></property>
-          <property name="rightMargin"><number>16</number></property>
-          <property name="bottomMargin"><number>14</number></property>
+          <property name="leftMargin"><number>20</number></property>
+          <property name="topMargin"><number>16</number></property>
+          <property name="rightMargin"><number>20</number></property>
+          <property name="bottomMargin"><number>16</number></property>
           <property name="spacing"><number>10</number></property>
           <item>
            <widget class="PhaseBreakdownBar" name="phaseBar" native="true">

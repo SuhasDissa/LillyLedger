@@ -7,14 +7,20 @@
    <property name="topMargin"><number>0</number></property>
    <property name="rightMargin"><number>0</number></property>
    <property name="bottomMargin"><number>0</number></property>
-   <property name="spacing"><number>12</number></property>
+   <property name="spacing"><number>16</number></property>
    <!-- Input file group -->
    <item>
     <widget class="QGroupBox" name="inputGroup">
      <property name="title"><string>Input File</string></property>
      <layout class="QVBoxLayout" name="inputGroupLayout">
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <property name="spacing"><number>10</number></property>
       <item>
        <layout class="QHBoxLayout" name="inputPathLayout">
+        <property name="spacing"><number>8</number></property>
         <item>
          <widget class="QLineEdit" name="inputPathEdit">
           <property name="readOnly"><bool>true</bool></property>
@@ -53,8 +59,14 @@
     <widget class="QGroupBox" name="outputGroup">
      <property name="title"><string>Output File</string></property>
      <layout class="QVBoxLayout" name="outputGroupLayout">
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <property name="spacing"><number>10</number></property>
       <item>
        <layout class="QHBoxLayout" name="outputPathLayout">
+        <property name="spacing"><number>8</number></property>
         <item>
          <widget class="QLineEdit" name="outputPathEdit">
           <property name="readOnly"><bool>true</bool></property>
@@ -78,6 +90,11 @@
     <widget class="QGroupBox" name="runGroup">
      <property name="title"><string>Run Engine</string></property>
      <layout class="QVBoxLayout" name="runGroupLayout">
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <property name="spacing"><number>10</number></property>
       <item>
        <widget class="QProgressBar" name="progressBar">
         <property name="minimum"><number>0</number></property>
@@ -107,6 +124,7 @@
       <item>
        <widget class="QPushButton" name="clearLogButton">
         <property name="text"><string>Clear Log</string></property>
+        <property name="minimumSize"><size><width>0</width><height>34</height></size></property>
        </widget>
       </item>
      </layout>

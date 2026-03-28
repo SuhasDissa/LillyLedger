@@ -124,15 +124,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
 
     ui_->setupUi(this);
 
-    // Populate topTabButtons_ from .ui widgets
-    topTabButtons_ = {ui_->orderBookButton, ui_->reportsButton, ui_->manualButton,
-                      ui_->performanceButton};
-
     // Set object names needed for stylesheet targeting
-    ui_->orderBookButton->setObjectName("TopTabBtn");
-    ui_->reportsButton->setObjectName("TopTabBtn");
-    ui_->manualButton->setObjectName("TopTabBtn");
-    ui_->performanceButton->setObjectName("TopTabBtn");
     ui_->openCsvButton->setObjectName("OpenCsvBtn");
     ui_->runEngineButton->setObjectName("RunEngineBtn");
     ui_->exportCsvButton->setObjectName("ExportCsvBtn");
@@ -238,16 +230,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
                                  "2. Run Engine\n"
                                  "3. Inspect reports, order book and performance.");
     });
-
-    // Top bar tab connections
-    connect(ui_->orderBookButton, &QPushButton::clicked, this,
-            [this]() { setCurrentPage(kPageOrderBook); });
-    connect(ui_->reportsButton, &QPushButton::clicked, this,
-            [this]() { setCurrentPage(kPageExecutionReports); });
-    connect(ui_->manualButton, &QPushButton::clicked, this,
-            [this]() { setCurrentPage(kPageManualEntry); });
-    connect(ui_->performanceButton, &QPushButton::clicked, this,
-            [this]() { setCurrentPage(kPagePerformance); });
 
     // Action buttons
     connect(ui_->openCsvButton, &QPushButton::clicked, this, [this]() {
@@ -839,11 +821,6 @@ void MainWindow::setCurrentPage(int index) {
     }
 
     ui_->stackedWidget->setCurrentIndex(index);
-    for (std::size_t i = 0; i < topTabButtons_.size(); ++i) {
-        if (topTabButtons_[i] != nullptr) {
-            topTabButtons_[i]->setChecked(static_cast<int>(i) == index);
-        }
-    }
 
     ui_->sidebarInstrumentsButton->setChecked(index == kPageOrderBook);
     ui_->sidebarAnalyticsButton->setChecked(index == kPageExecutionReports);

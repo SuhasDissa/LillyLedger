@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <vector>
 
-class QPushButton;
 class QStackedWidget;
 
 class ManualOrderEntryWidget;
@@ -59,7 +58,6 @@ class MainWindow : public QMainWindow {
     static QString fixedCharToQString(const char *text, std::size_t maxLen);
 
     Ui::MainWindow *ui_;
-    std::vector<QPushButton *> topTabButtons_;
 
     QString inputFilePath_;
     std::vector<ExecutionReport> executionReports_;
