@@ -27,25 +27,17 @@ std::vector<ExecutionReport> ExecutionHandler::buildFillReports(const Order &agg
     std::vector<ExecutionReport> reports;
     reports.reserve(trades.size() * 2);
 
-    // Track how much of the aggressor has been filled so far to determine
-    // whether each execution event produces a Fill or a PFill for that side.
     uint16_t aggressorFilled = 0;
 
     for (const Trade &t : trades) {
-        // ── Execution price ───────────────────────────────────────────────────
-        // The passive order always sets the price.  An aggressive buy at $11
-        // against a resting sell at $10 executes at $10 (price improvement).
-        const double execPrice = t.execPrice; // == passive.order.price
+
+        const double execPrice = t.execPrice;
 
         aggressorFilled += t.execQty;
 
-        // ── Passive-side status ───────────────────────────────────────────────
-        // Trade snapshots passive.remainingQty before the decrement.
         bool passiveFull = (t.passive.remainingQty == t.execQty);
         Status passiveStatus = passiveFull ? Status::Fill : Status::PFill;
 
-        // ── Aggressor-side status ─────────────────────────────────────────────
-        // Fill only when the aggressor's cumulative fills reach its full qty.
         Status aggressorStatus =
             (aggressorFilled == aggressor.quantity) ? Status::Fill : Status::PFill;
 

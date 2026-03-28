@@ -32,6 +32,25 @@ flowchart TD
     CSVWriter --> CSV_OUT([Output CSV])
 ```
 
+## Graphical Interface
+
+LillyLedger includes a fully-featured desktop companion application built with Qt6/C++. It provides tools for visualizing order processing metrics and interacting with the central limit order book.
+
+<p align="center">
+  <img src="images/Performance.png" alt="Performance Dashboard" width="800"/>
+</p>
+<p align="center">
+  <img src="images/Order_Book.png" alt="Order Book Explorer" width="400"/>
+  <img src="images/Execution_Reports.png" alt="Execution Reports" width="400"/>
+</p>
+
+Features include:
+
+- **Dashboard & Analytics:** Import `orders.csv` files and view execution metrics, including processing throughput and order distribution charts.
+- **Order Book Explorer:** Inspect simulated buy and sell depth for specific commodity instruments (Rose, Lavender, Lotus, Tulip, Orchid).
+- **Execution Reports Browser:** View granular trades, rejections, and partial fills with integrated table filtering.
+- **Manual Order Entry:** Inject single custom trades mimicking client behavior directly into the engine.
+
 ## Build Instructions
 
 ```bash
@@ -41,8 +60,11 @@ cmake ..
 
 make
 
-# run it using
+# run CLI engine using
 ./lillyledger
+
+# run GUI application using
+./lillyledger-gui
 
 # delete build files using
 make clean
@@ -54,12 +76,12 @@ Benchmarked on a release build, averaged over 5 runs.
 
 | Phase  | 10K orders | 1M orders |
 |--------|-----------|-----------|
-| Parse  | ~5.5 ms   | ~385 ms   |
-| Match  | ~7.6 ms   | ~251 ms   |
-| Write  | ~7.0 ms   | ~310 ms   |
-| **Total**  | **~20 ms** | **~946 ms** |
-| Reports generated | 21,756 | 1,000,000 |
-| **Throughput** | ~500K orders/sec | ~1.06M orders/sec |
+| Parse  | ~5.5 ms   | ~417 ms   |
+| Match  | ~7.6 ms   | ~13,452 ms   |
+| Write  | ~7.0 ms   | ~718 ms   |
+| **Total**  | **~20 ms** | **~14,587 ms** |
+| Reports generated | 21,756 | 2,043,990 |
+| **Throughput** | ~500K orders/sec | ~68.6K orders/sec |
 
 **Test system:** Intel Core i5-12450H (8 cores / 12 threads, up to 4.4 GHz), 12 MB L3 cache, 16 GB RAM, Linux
 

@@ -3,14 +3,13 @@
 
 static bool pricesCross(const Order &aggressor, const BookEntry &passive) {
     if (aggressor.side == Side::Buy)
-        return passive.order.price <= aggressor.price; // buy crosses when ask ≤ bid
+        return passive.order.price <= aggressor.price;
     else
-        return passive.order.price >= aggressor.price; // sell crosses when bid ≥ ask
+        return passive.order.price >= aggressor.price;
 }
 
 bool MatchingEngine::isAggressive(const Order &order, const std::vector<BookEntry> &opposite) {
-    // The book is sorted so the best price is always at the front.
-    // If the front cannot be matched, nothing can.
+
     if (opposite.empty())
         return false;
     return pricesCross(order, opposite.front());

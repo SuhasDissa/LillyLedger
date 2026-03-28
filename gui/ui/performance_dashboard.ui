@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PerformanceDashboard</class>
+ <widget class="QWidget" name="PerformanceDashboard">
+  <layout class="QVBoxLayout" name="outerLayout">
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+   <property name="spacing"><number>0</number></property>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex"><number>0</number></property>
+     <!-- Page 0: placeholder -->
+     <widget class="QWidget" name="placeholderWidget">
+      <layout class="QVBoxLayout" name="placeholderLayout">
+       <property name="leftMargin"><number>0</number></property>
+       <property name="topMargin"><number>0</number></property>
+       <property name="rightMargin"><number>0</number></property>
+       <property name="bottomMargin"><number>0</number></property>
+       <item>
+        <spacer name="placeholderTopSpacer">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="emojiLabel">
+         <property name="text"><string>🌸</string></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="placeholderText">
+         <property name="text"><string>Run the engine to see performance metrics</string></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="placeholderBottomSpacer">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <!-- Page 1: content -->
+     <widget class="QWidget" name="contentWidget">
+      <layout class="QVBoxLayout" name="contentLayout">
+       <property name="leftMargin"><number>24</number></property>
+       <property name="topMargin"><number>24</number></property>
+       <property name="rightMargin"><number>24</number></property>
+       <property name="bottomMargin"><number>24</number></property>
+       <property name="spacing"><number>16</number></property>
+       <!-- KPI row -->
+       <item>
+        <layout class="QHBoxLayout" name="kpiRow">
+         <property name="spacing"><number>14</number></property>
+         <!-- KPI card 1: Orders Processed -->
+         <item>
+          <widget class="QFrame" name="kpiCard1">
+           <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+           <layout class="QVBoxLayout" name="kpiLayout1">
+            <property name="leftMargin"><number>20</number></property>
+            <property name="topMargin"><number>16</number></property>
+            <property name="rightMargin"><number>20</number></property>
+            <property name="bottomMargin"><number>16</number></property>
+            <property name="spacing"><number>6</number></property>
+            <item>
+             <widget class="QLabel" name="kpiTitle1">
+              <property name="text"><string>Orders Processed</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="ordersValueLabel">
+              <property name="text"><string>0</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="kpiSubtitle1">
+              <property name="text"><string>this run</string></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <!-- KPI card 2: Reports Generated -->
+         <item>
+          <widget class="QFrame" name="kpiCard2">
+           <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+           <layout class="QVBoxLayout" name="kpiLayout2">
+            <property name="leftMargin"><number>20</number></property>
+            <property name="topMargin"><number>16</number></property>
+            <property name="rightMargin"><number>20</number></property>
+            <property name="bottomMargin"><number>16</number></property>
+            <property name="spacing"><number>6</number></property>
+            <item>
+             <widget class="QLabel" name="kpiTitle2">
+              <property name="text"><string>Reports Generated</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="reportsValueLabel">
+              <property name="text"><string>0</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="kpiSubtitle2">
+              <property name="text"><string>this run</string></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <!-- KPI card 3: Throughput -->
+         <item>
+          <widget class="QFrame" name="kpiCard3">
+           <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+           <layout class="QVBoxLayout" name="kpiLayout3">
+            <property name="leftMargin"><number>20</number></property>
+            <property name="topMargin"><number>16</number></property>
+            <property name="rightMargin"><number>20</number></property>
+            <property name="bottomMargin"><number>16</number></property>
+            <property name="spacing"><number>6</number></property>
+            <item>
+             <widget class="QLabel" name="kpiTitle3">
+              <property name="text"><string>Throughput</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="throughputValueLabel">
+              <property name="text"><string>0</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="kpiSubtitle3">
+              <property name="text"><string>orders/sec</string></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <!-- KPI card 4: Total Time -->
+         <item>
+          <widget class="QFrame" name="kpiCard4">
+           <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+           <layout class="QVBoxLayout" name="kpiLayout4">
+            <property name="leftMargin"><number>20</number></property>
+            <property name="topMargin"><number>16</number></property>
+            <property name="rightMargin"><number>20</number></property>
+            <property name="bottomMargin"><number>16</number></property>
+            <property name="spacing"><number>6</number></property>
+            <item>
+             <widget class="QLabel" name="kpiTitle4">
+              <property name="text"><string>Total Time</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="totalTimeValueLabel">
+              <property name="text"><string>0.00 ms</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="kpiSubtitle4">
+              <property name="text"><string>this run</string></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <!-- Phase breakdown container -->
+       <item>
+        <widget class="QFrame" name="phaseContainer">
+         <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+         <layout class="QVBoxLayout" name="phaseLayout">
+          <property name="leftMargin"><number>20</number></property>
+          <property name="topMargin"><number>16</number></property>
+          <property name="rightMargin"><number>20</number></property>
+          <property name="bottomMargin"><number>16</number></property>
+          <property name="spacing"><number>10</number></property>
+          <item>
+           <widget class="PhaseBreakdownBar" name="phaseBar" native="true">
+            <property name="minimumSize"><size><width>0</width><height>40</height></size></property>
+            <property name="maximumSize"><size><width>16777215</width><height>40</height></size></property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="legendRow">
+            <property name="spacing"><number>20</number></property>
+            <!-- Parse legend -->
+            <item>
+             <layout class="QHBoxLayout" name="parseLegendLayout">
+              <property name="spacing"><number>6</number></property>
+              <item>
+               <widget class="QLabel" name="parseSwatch">
+                <property name="minimumSize"><size><width>12</width><height>12</height></size></property>
+                <property name="maximumSize"><size><width>12</width><height>12</height></size></property>
+                <property name="text"><string/></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="parseLegendName">
+                <property name="text"><string>Parse</string></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="parseLegendValueLabel">
+                <property name="text"><string>0.00 ms</string></property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="parseLegendSpacer">
+                <property name="orientation"><enum>Qt::Horizontal</enum></property>
+                <property name="sizeHint" stdset="0"><size><width>8</width><height>20</height></size></property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <!-- Match legend -->
+            <item>
+             <layout class="QHBoxLayout" name="matchLegendLayout">
+              <property name="spacing"><number>6</number></property>
+              <item>
+               <widget class="QLabel" name="matchSwatch">
+                <property name="minimumSize"><size><width>12</width><height>12</height></size></property>
+                <property name="maximumSize"><size><width>12</width><height>12</height></size></property>
+                <property name="text"><string/></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="matchLegendName">
+                <property name="text"><string>Match</string></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="matchLegendValueLabel">
+                <property name="text"><string>0.00 ms</string></property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="matchLegendSpacer">
+                <property name="orientation"><enum>Qt::Horizontal</enum></property>
+                <property name="sizeHint" stdset="0"><size><width>8</width><height>20</height></size></property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <!-- Write legend -->
+            <item>
+             <layout class="QHBoxLayout" name="writeLegendLayout">
+              <property name="spacing"><number>6</number></property>
+              <item>
+               <widget class="QLabel" name="writeSwatch">
+                <property name="minimumSize"><size><width>12</width><height>12</height></size></property>
+                <property name="maximumSize"><size><width>12</width><height>12</height></size></property>
+                <property name="text"><string/></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="writeLegendName">
+                <property name="text"><string>Write</string></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="writeLegendValueLabel">
+                <property name="text"><string>0.00 ms</string></property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="writeLegendSpacer">
+                <property name="orientation"><enum>Qt::Horizontal</enum></property>
+                <property name="sizeHint" stdset="0"><size><width>8</width><height>20</height></size></property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="legendRowSpacer">
+              <property name="orientation"><enum>Qt::Horizontal</enum></property>
+              <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <!-- Chart view -->
+       <item>
+        <widget class="QChartView" name="chartView">
+         <property name="minimumSize"><size><width>0</width><height>220</height></size></property>
+        </widget>
+       </item>
+       <!-- Instrument table -->
+       <item>
+        <widget class="QTableWidget" name="instrumentTable">
+         <property name="minimumSize"><size><width>0</width><height>220</height></size></property>
+         <property name="rowCount"><number>5</number></property>
+         <property name="columnCount"><number>4</number></property>
+         <column><property name="text"><string>Instrument</string></property></column>
+         <column><property name="text"><string>Orders Routed</string></property></column>
+         <column><property name="text"><string>Fill Rate %</string></property></column>
+         <column><property name="text"><string>Avg Fill Qty</string></property></column>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PhaseBreakdownBar</class>
+   <extends>QWidget</extends>
+   <header>performance_dashboard.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>QtCharts/QChartView</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ImportExportPanel</class>
+ <widget class="QWidget" name="ImportExportPanel">
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+   <property name="spacing"><number>16</number></property>
+   <!-- Input file group -->
+   <item>
+    <widget class="QGroupBox" name="inputGroup">
+     <property name="title"><string>Input File</string></property>
+     <layout class="QVBoxLayout" name="inputGroupLayout">
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="inputPathLayout">
+        <property name="spacing"><number>8</number></property>
+        <item>
+         <widget class="QLineEdit" name="inputPathEdit">
+          <property name="readOnly"><bool>true</bool></property>
+          <property name="minimumSize"><size><width>0</width><height>34</height></size></property>
+          <property name="placeholderText"><string>No file selected</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="inputBrowseButton">
+          <property name="text"><string>Browse…</string></property>
+          <property name="minimumSize"><size><width>0</width><height>34</height></size></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="previewTable">
+        <property name="columnCount"><number>5</number></property>
+        <column><property name="text"><string>Client Order ID</string></property></column>
+        <column><property name="text"><string>Instrument</string></property></column>
+        <column><property name="text"><string>Side</string></property></column>
+        <column><property name="text"><string>Qty</string></property></column>
+        <column><property name="text"><string>Price</string></property></column>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="rowCountLabel">
+        <property name="text"><string>0 rows detected</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Output file group -->
+   <item>
+    <widget class="QGroupBox" name="outputGroup">
+     <property name="title"><string>Output File</string></property>
+     <layout class="QVBoxLayout" name="outputGroupLayout">
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="outputPathLayout">
+        <property name="spacing"><number>8</number></property>
+        <item>
+         <widget class="QLineEdit" name="outputPathEdit">
+          <property name="readOnly"><bool>true</bool></property>
+          <property name="minimumSize"><size><width>0</width><height>34</height></size></property>
+          <property name="placeholderText"><string>Auto-generated alongside input</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="outputBrowseButton">
+          <property name="text"><string>Browse…</string></property>
+          <property name="minimumSize"><size><width>0</width><height>34</height></size></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Run engine group -->
+   <item>
+    <widget class="QGroupBox" name="runGroup">
+     <property name="title"><string>Run Engine</string></property>
+     <layout class="QVBoxLayout" name="runGroupLayout">
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="minimum"><number>0</number></property>
+        <property name="maximum"><number>100</number></property>
+        <property name="value"><number>0</number></property>
+        <property name="visible"><bool>false</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="runButton">
+        <property name="text"><string>▶ Run Matching Engine</string></property>
+        <property name="enabled"><bool>false</bool></property>
+        <property name="minimumSize"><size><width>0</width><height>48</height></size></property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch><verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPlainTextEdit" name="logView">
+        <property name="readOnly"><bool>true</bool></property>
+        <property name="minimumSize"><size><width>0</width><height>160</height></size></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="clearLogButton">
+        <property name="text"><string>Clear Log</string></property>
+        <property name="minimumSize"><size><width>0</width><height>34</height></size></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Bottom spacer -->
+   <item>
+    <spacer name="bottomSpacer">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
