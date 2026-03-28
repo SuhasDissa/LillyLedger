@@ -54,12 +54,12 @@ Benchmarked on a release build, averaged over 5 runs.
 
 | Phase  | 10K orders | 1M orders |
 |--------|-----------|-----------|
-| Parse  | ~5.5 ms   | ~385 ms   |
-| Match  | ~7.6 ms   | ~251 ms   |
-| Write  | ~7.0 ms   | ~310 ms   |
-| **Total**  | **~20 ms** | **~946 ms** |
-| Reports generated | 21,756 | 1,000,000 |
-| **Throughput** | ~500K orders/sec | ~1.06M orders/sec |
+| Parse  | ~5.5 ms   | ~417 ms   |
+| Match  | ~7.6 ms   | ~13,452 ms   |
+| Write  | ~7.0 ms   | ~718 ms   |
+| **Total**  | **~20 ms** | **~14,587 ms** |
+| Reports generated | 21,756 | 2,043,990 |
+| **Throughput** | ~500K orders/sec | ~68.6K orders/sec |
 
 **Test system:** Intel Core i5-12450H (8 cores / 12 threads, up to 4.4 GHz), 12 MB L3 cache, 16 GB RAM, Linux
 
