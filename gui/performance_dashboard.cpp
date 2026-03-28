@@ -64,17 +64,17 @@ class FillRateProgressDelegate : public QStyledItemDelegate {
         const QRect trackRect = option.rect.adjusted(8, 8, -8, -8);
 
         painter->setPen(Qt::NoPen);
-        painter->setBrush(QColor("#f5f0ea"));
-        painter->drawRoundedRect(trackRect, 5, 5);
+        painter->setBrush(QColor("#eee7e3")); // surface-container-high
+        painter->drawRoundedRect(trackRect, 2, 2);
 
         QRect fillRect = trackRect;
         fillRect.setWidth(static_cast<int>(std::round(trackRect.width() * (value / 100.0))));
         if (fillRect.width() > 0) {
-            painter->setBrush(QColor("#2c694d"));
-            painter->drawRoundedRect(fillRect, 5, 5);
+            painter->setBrush(QColor("#2c694d")); // secondary
+            painter->drawRoundedRect(fillRect, 2, 2);
         }
 
-        painter->setPen(QColor("#1e1b19"));
+        painter->setPen(QColor("#1e1b19")); // on-surface
         painter->drawText(trackRect, Qt::AlignCenter, index.data(Qt::DisplayRole).toString());
         painter->restore();
     }
@@ -106,9 +106,9 @@ void PhaseBreakdownBar::paintEvent(QPaintEvent *event) {
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     const QRectF barRect = rect().adjusted(0.5, 0.5, -0.5, -0.5);
-    painter.setPen(QPen(QColor("#e8e2d9"), 1));
-    painter.setBrush(QColor("#ffffff"));
-    painter.drawRoundedRect(barRect, 8, 8);
+    painter.setPen(QPen(QColor("#d6c3b7"), 1)); // outline-variant
+    painter.setBrush(QColor("#eee7e3"));        // surface-container-high
+    painter.drawRoundedRect(barRect, 2, 2);
 
     if (stats_.totalUs <= 0) {
         return;
@@ -118,7 +118,11 @@ void PhaseBreakdownBar::paintEvent(QPaintEvent *event) {
                                            std::max<int64_t>(0, stats_.matchUs),
                                            std::max<int64_t>(0, stats_.writeUs)};
     const std::array<QString, 3> labels = {"Parse", "Match", "Write"};
-    const std::array<QColor, 3> colors = {QColor("#4a7eb5"), QColor("#2c694d"), QColor("#c2855a")};
+    const std::array<QColor, 3> colors = {
+        QColor("#84746a"), // outline — Parse
+        QColor("#2c694d"), // secondary — Match
+        QColor("#86522b")  // primary — Write
+    };
 
     QPainterPath clipPath;
     clipPath.addRoundedRect(barRect, 8, 8);
@@ -159,8 +163,8 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
     // KPI card styles
     const QString kpiCardStyle = "QFrame {"
                                  "  background-color: #ffffff;"
-                                 "  border: 1px solid #ead8ce;"
-                                 "  border-radius: 10px;"
+                                 "  border: 1px solid #d6c3b7;"
+                                 "  border-radius: 6px;"
                                  "}";
     ui_->kpiCard1->setStyleSheet(kpiCardStyle);
     ui_->kpiCard2->setStyleSheet(kpiCardStyle);
@@ -170,19 +174,20 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
     // Phase breakdown container style
     ui_->phaseContainer->setStyleSheet("QFrame {"
                                        "  background-color: #ffffff;"
-                                       "  border: 1px solid #ead8ce;"
-                                       "  border-radius: 10px;"
+                                       "  border: 1px solid #d6c3b7;"
+                                       "  border-radius: 6px;"
                                        "}");
 
-    // Legend swatches
-    ui_->parseSwatch->setStyleSheet("background-color: #4a7eb5; border-radius: 4px;");
-    ui_->matchSwatch->setStyleSheet("background-color: #2c694d; border-radius: 4px;");
-    ui_->writeSwatch->setStyleSheet("background-color: #c2855a; border-radius: 4px;");
+    // Legend swatches — HTML theme tokens
+    ui_->parseSwatch->setStyleSheet("background-color: #84746a; border-radius: 2px;"); // outline
+    ui_->matchSwatch->setStyleSheet("background-color: #2c694d; border-radius: 2px;"); // secondary
+    ui_->writeSwatch->setStyleSheet("background-color: #86522b; border-radius: 2px;"); // primary
 
     // Chart setup
     historySeries_ = new QLineSeries(this);
-    historySeries_->setColor(QColor("#7b5fa3"));
-    QPen seriesPen(QColor("#7b5fa3"));
+    historySeries_->setColor(QColor("#86522b")); // primary
+    historySeries_->setPointsVisible(true);
+    QPen seriesPen(QColor("#86522b"));
     seriesPen.setWidth(2);
     historySeries_->setPen(seriesPen);
 
@@ -192,24 +197,24 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
     chart->setBackgroundVisible(true);
     chart->setBackgroundBrush(QBrush(QColor("#ffffff")));
     chart->setPlotAreaBackgroundVisible(true);
-    chart->setPlotAreaBackgroundBrush(QBrush(QColor("#fdf9f6")));
+    chart->setPlotAreaBackgroundBrush(QBrush(QColor("#fff8f5")));
     chart->setMargins(QMargins(12, 12, 12, 12));
 
     axisX_ = new QValueAxis();
     axisX_->setTitleText("Run");
     axisX_->setLabelFormat("%d");
     axisX_->setRange(1, kMaxHistoryRuns);
-    axisX_->setGridLineColor(QColor("#ead8ce"));
-    axisX_->setLabelsColor(QColor("#7a6a5e"));
-    axisX_->setTitleBrush(QBrush(QColor("#9a8a7e")));
+    axisX_->setGridLineColor(QColor("#d6c3b7"));
+    axisX_->setLabelsColor(QColor("#52443c"));
+    axisX_->setTitleBrush(QBrush(QColor("#84746a")));
 
     axisY_ = new QValueAxis();
     axisY_->setTitleText("ms");
     axisY_->setLabelFormat("%.2f");
     axisY_->setRange(0.0, 1.0);
-    axisY_->setGridLineColor(QColor("#ead8ce"));
-    axisY_->setLabelsColor(QColor("#7a6a5e"));
-    axisY_->setTitleBrush(QBrush(QColor("#9a8a7e")));
+    axisY_->setGridLineColor(QColor("#d6c3b7"));
+    axisY_->setLabelsColor(QColor("#52443c"));
+    axisY_->setTitleBrush(QBrush(QColor("#84746a")));
 
     chart->addAxis(axisX_, Qt::AlignBottom);
     chart->addAxis(axisY_, Qt::AlignLeft);
@@ -219,10 +224,13 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
     ui_->chartView->setChart(chart);
     ui_->chartView->setRenderHint(QPainter::Antialiasing);
     ui_->chartView->setRubberBand(QChartView::HorizontalRubberBand);
+    ui_->chartView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui_->chartView, &QWidget::customContextMenuRequested, this,
+            [chart](const QPoint &) { chart->zoomReset(); });
     ui_->chartView->setStyleSheet("QChartView {"
                                   "  background-color: #ffffff;"
-                                  "  border: 1px solid #ead8ce;"
-                                  "  border-radius: 10px;"
+                                  "  border: 1px solid #d6c3b7;"
+                                  "  border-radius: 6px;"
                                   "}");
 
     // Instrument table
@@ -246,26 +254,27 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
         "QTableWidget {"
         "  background-color: #ffffff;"
         "  color: #1e1b19;"
-        "  border: 1px solid #ead8ce;"
-        "  border-radius: 10px;"
+        "  border: 1px solid #d6c3b7;"
+        "  border-radius: 6px;"
         "  font-size: 13px;"
-        "  gridline-color: #f5ede7;"
+        "  gridline-color: #eee7e3;"
         "}"
-        "QTableWidget::item { padding: 4px 12px; border-bottom: 1px solid #f5ede7; }"
+        "QTableWidget::item { padding: 4px 12px; border-bottom: 1px solid #eee7e3; }"
         "QHeaderView::section {"
-        "  background-color: #f5ede7;"
-        "  color: #7a6a5e;"
+        "  background-color: #f4ece8;"
+        "  color: #52443c;"
         "  border: none;"
-        "  border-bottom: 1.5px solid #ead8ce;"
-        "  border-right: 1px solid #ead8ce;"
+        "  border-bottom: 1px solid #d6c3b7;"
+        "  border-right: 1px solid #d6c3b7;"
         "  padding: 8px 12px;"
         "  font-weight: 700;"
         "  font-size: 10px;"
-        "  letter-spacing: 0.5px;"
+        "  letter-spacing: 1px;"
+        "  text-transform: uppercase;"
         "}");
 
-    setStyleSheet("PerformanceDashboard { background-color: #faf8f4; }"
-                  "QLabel { color: #3b312b; }");
+    setStyleSheet("PerformanceDashboard { background-color: #fff8f5; }"
+                  "QLabel { color: #1e1b19; }");
 
     updateKpis(PerfStats{});
     updatePhaseLegend(PerfStats{});
@@ -342,18 +351,32 @@ void PerformanceDashboard::updateHistoryChart() {
     }
 
     double maxMs = 0.0;
+    double minMs = std::numeric_limits<double>::max();
     for (const RunSample &sample : runHistory_) {
         const double ms = sample.stats.totalUs / 1000.0;
         historySeries_->append(sample.runNumber, ms);
         maxMs = std::max(maxMs, ms);
+        minMs = std::min(minMs, ms);
     }
 
     const int firstRun = runHistory_.front().runNumber;
     const int lastRun = runHistory_.back().runNumber;
-    axisX_->setRange(firstRun, lastRun);
 
-    const double paddedMax = std::max(1.0, maxMs * 1.15);
-    axisY_->setRange(0.0, paddedMax);
+    if (firstRun == lastRun) {
+        const int minRun = std::max(1, firstRun - 1);
+        axisX_->setRange(minRun, firstRun + 1);
+        axisX_->setTickCount((firstRun + 1) - minRun + 1);
+    } else {
+        axisX_->setRange(firstRun, lastRun);
+        axisX_->setTickCount(std::min(5, lastRun - firstRun + 1));
+    }
+
+    if (maxMs == minMs) {
+        axisY_->setRange(std::max(0.0, minMs - 1.0), maxMs + 1.0);
+    } else {
+        const double padding = (maxMs - minMs) * 0.15;
+        axisY_->setRange(std::max(0.0, minMs - padding), maxMs + padding);
+    }
 }
 
 void PerformanceDashboard::updateInstrumentTable(const std::vector<ExecutionReport> &reports) {

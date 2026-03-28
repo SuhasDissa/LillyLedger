@@ -1,524 +1,1148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry"><rect><x>0</x><y>0</y><width>1280</width><height>820</height></rect></property>
-  <property name="windowTitle"><string>LillyLedger</string></property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="rootLayout">
-    <property name="leftMargin"><number>0</number></property>
-    <property name="topMargin"><number>0</number></property>
-    <property name="rightMargin"><number>0</number></property>
-    <property name="bottomMargin"><number>0</number></property>
-    <property name="spacing"><number>0</number></property>
-    <!-- Sidebar -->
-    <item>
-     <widget class="QWidget" name="Sidebar">
-      <property name="minimumSize"><size><width>220</width><height>0</height></size></property>
-      <property name="maximumSize"><size><width>220</width><height>16777215</height></size></property>
-      <layout class="QVBoxLayout" name="sidebarLayout">
-       <property name="leftMargin"><number>16</number></property>
-       <property name="topMargin"><number>28</number></property>
-       <property name="rightMargin"><number>16</number></property>
-       <property name="bottomMargin"><number>28</number></property>
-       <property name="spacing"><number>2</number></property>
-       <item>
-        <widget class="QWidget" name="logoContainer" native="true">
-         <layout class="QVBoxLayout" name="logoLayout">
-          <property name="leftMargin"><number>0</number></property>
-          <property name="topMargin"><number>0</number></property>
-          <property name="rightMargin"><number>0</number></property>
-          <property name="bottomMargin"><number>32</number></property>
-          <property name="spacing"><number>6</number></property>
-          <item>
-           <widget class="QLabel" name="Logo">
-            <property name="text"><string>LillyLedger</string></property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="LogoSubtitle">
-            <property name="text"><string>PREMIUM TRADING</string></property>
-           </widget>
-          </item>
-         </layout>
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>1280</width>
+                <height>820</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>LillyLedger</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QHBoxLayout" name="rootLayout">
+                <property name="leftMargin">
+                    <number>0</number>
+                </property>
+                <property name="topMargin">
+                    <number>0</number>
+                </property>
+                <property name="rightMargin">
+                    <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>0</number>
+                </property>
+                <!-- Sidebar -->
+                <item>
+                    <widget class="QWidget" name="Sidebar">
+                        <property name="minimumSize">
+                            <size>
+                                <width>220</width>
+                                <height>0</height>
+                            </size>
+                        </property>
+                        <property name="maximumSize">
+                            <size>
+                                <width>220</width>
+                                <height>16777215</height>
+                            </size>
+                        </property>
+                        <layout class="QVBoxLayout" name="sidebarLayout">
+                            <property name="leftMargin">
+                                <number>16</number>
+                            </property>
+                            <property name="topMargin">
+                                <number>28</number>
+                            </property>
+                            <property name="rightMargin">
+                                <number>16</number>
+                            </property>
+                            <property name="bottomMargin">
+                                <number>28</number>
+                            </property>
+                            <property name="spacing">
+                                <number>2</number>
+                            </property>
+                            <item>
+                                <widget class="QWidget" name="logoContainer" native="true">
+                                    <layout class="QVBoxLayout" name="logoLayout">
+                                        <property name="leftMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="topMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="rightMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="bottomMargin">
+                                            <number>32</number>
+                                        </property>
+                                        <property name="spacing">
+                                            <number>6</number>
+                                        </property>
+                                        <item>
+                                            <widget class="QLabel" name="Logo">
+                                                <property name="text">
+                                                    <string>LillyLedger</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QLabel" name="LogoSubtitle">
+                                                <property name="text">
+                                                    <string>PREMIUM TRADING</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QLabel" name="navHeader">
+                                    <property name="text">
+                                        <string>NAVIGATION</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="sidebarInstrumentsButton">
+                                    <property name="text">
+                                        <string>  Order Book</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="navIcon" stdset="0">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="sidebarAnalyticsButton">
+                                    <property name="text">
+                                        <string>  Execution Reports</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="navIcon" stdset="0">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="sidebarManualButton">
+                                    <property name="text">
+                                        <string>  Manual Entry</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="navIcon" stdset="0">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="sidebarPerformanceButton">
+                                    <property name="text">
+                                        <string>  Performance</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="navIcon" stdset="0">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <spacer name="sidebarSpacer">
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="sidebarSupportButton">
+                                    <property name="text">
+                                        <string>Support</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="navIcon" stdset="0">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                </item>
+                <!-- Main content area -->
+                <item>
+                    <widget class="QWidget" name="mainContent" native="true">
+                        <layout class="QVBoxLayout" name="mainContentLayout">
+                            <property name="leftMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="rightMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="bottomMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="spacing">
+                                <number>0</number>
+                            </property>
+                            <!-- Top bar -->
+                            <item>
+                                <widget class="QWidget" name="TopBar">
+                                    <property name="minimumSize">
+                                        <size>
+                                            <width>0</width>
+                                            <height>64</height>
+                                        </size>
+                                    </property>
+                                    <property name="maximumSize">
+                                        <size>
+                                            <width>16777215</width>
+                                            <height>64</height>
+                                        </size>
+                                    </property>
+                                    <layout class="QHBoxLayout" name="topBarLayout">
+                                        <property name="leftMargin">
+                                            <number>32</number>
+                                        </property>
+                                        <property name="topMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="rightMargin">
+                                            <number>32</number>
+                                        </property>
+                                        <property name="bottomMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <item>
+                                            <spacer name="topBarSpacer">
+                                                <property name="orientation">
+                                                    <enum>Qt::Horizontal</enum>
+                                                </property>
+                                                <property name="sizeHint" stdset="0">
+                                                    <size>
+                                                        <width>40</width>
+                                                        <height>20</height>
+                                                    </size>
+                                                </property>
+                                            </spacer>
+                                        </item>
+                                        <item>
+                                            <widget class="QPushButton" name="openCsvButton">
+                                                <property name="text">
+                                                    <string>Open CSV</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QPushButton" name="runEngineButton">
+                                                <property name="text">
+                                                    <string>Run Engine</string>
+                                                </property>
+                                                <property name="enabled">
+                                                    <bool>false</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <!-- Stacked widget with 4 pages -->
+                            <item>
+                                <widget class="QStackedWidget" name="stackedWidget">
+                                    <property name="currentIndex">
+                                        <number>1</number>
+                                    </property>
+                                    <!-- Page 0: Order Book -->
+                                    <widget class="QWidget" name="orderBookPage">
+                                        <layout class="QVBoxLayout" name="orderBookPageLayout">
+                                            <property name="leftMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="topMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="rightMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="bottomMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="spacing">
+                                                <number>0</number>
+                                            </property>
+                                            <item>
+                                                <widget class="QWidget" name="orderBookPageHeader" native="true">
+                                                    <property name="minimumSize">
+                                                        <size>
+                                                            <width>0</width>
+                                                            <height>88</height>
+                                                        </size>
+                                                    </property>
+                                                    <layout class="QHBoxLayout" name="orderBookHeaderLayout">
+                                                        <property name="leftMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QWidget" name="orderBookTitleContainer" native="true">
+                                                                <layout class="QVBoxLayout" name="orderBookTitleLayout">
+                                                                    <property name="leftMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="topMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="rightMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="bottomMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="spacing">
+                                                                        <number>4</number>
+                                                                    </property>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="orderTitle">
+                                                                            <property name="text">
+                                                                                <string>ORDER BOOK</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="orderBookSubtitleLabel">
+                                                                            <property name="text">
+                                                                                <string>Live order book by instrument</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                </layout>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="orderBookHeaderSpacer">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>40</width>
+                                                                        <height>20</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QComboBox" name="orderBookInstrumentCombo"/>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                            <item>
+                                                <widget class="QWidget" name="orderBookTableContainer" native="true">
+                                                    <layout class="QVBoxLayout" name="orderBookTableContainerLayout">
+                                                        <property name="leftMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>16</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="OrderBookWidget" name="orderBookWidget" native="true"/>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                        </layout>
+                                    </widget>
+                                    <!-- Page 1: Execution Reports (inline table) -->
+                                    <widget class="QWidget" name="reportsPage">
+                                        <layout class="QVBoxLayout" name="reportsPageLayout">
+                                            <property name="leftMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="topMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="rightMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="bottomMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="spacing">
+                                                <number>0</number>
+                                            </property>
+                                            <item>
+                                                <widget class="QWidget" name="reportsPageHeader" native="true">
+                                                    <property name="minimumSize">
+                                                        <size>
+                                                            <width>0</width>
+                                                            <height>88</height>
+                                                        </size>
+                                                    </property>
+                                                    <layout class="QHBoxLayout" name="reportsHeaderLayout">
+                                                        <property name="leftMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QWidget" name="reportsTitleContainer" native="true">
+                                                                <layout class="QVBoxLayout" name="reportsTitleLayout">
+                                                                    <property name="leftMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="topMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="rightMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="bottomMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="spacing">
+                                                                        <number>4</number>
+                                                                    </property>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="reportsTitle">
+                                                                            <property name="text">
+                                                                                <string>EXECUTION REPORTS</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="reportsSubtitleLabel">
+                                                                            <property name="text">
+                                                                                <string>No reports yet</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                </layout>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="reportsHeaderSpacer">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>40</width>
+                                                                        <height>20</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                        <item alignment="Qt::AlignVCenter">
+                                                            <widget class="QPushButton" name="exportCsvButton">
+                                                                <property name="text">
+                                                                    <string>Export CSV</string>
+                                                                </property>
+                                                                <property name="enabled">
+                                                                    <bool>false</bool>
+                                                                </property>
+                                                                <property name="minimumSize">
+                                                                    <size>
+                                                                        <width>120</width>
+                                                                        <height>36</height>
+                                                                    </size>
+                                                                </property>
+                                                                <property name="maximumSize">
+                                                                    <size>
+                                                                        <width>160</width>
+                                                                        <height>36</height>
+                                                                    </size>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                            <item>
+                                                <widget class="QWidget" name="FilterBar" native="true">
+                                                    <property name="minimumSize">
+                                                        <size>
+                                                            <width>0</width>
+                                                            <height>52</height>
+                                                        </size>
+                                                    </property>
+                                                    <layout class="QHBoxLayout" name="filterBarLayout">
+                                                        <property name="leftMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>0</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>0</number>
+                                                        </property>
+                                                        <property name="spacing">
+                                                            <number>12</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QComboBox" name="instrumentFilter"/>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QComboBox" name="statusFilter"/>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QComboBox" name="sideFilter"/>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="filterBarSpacer">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>40</width>
+                                                                        <height>20</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QLabel" name="showingResultsLabel">
+                                                                <property name="text">
+                                                                    <string>Showing 0 / 0 results</string>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                            <item>
+                                                <widget class="QWidget" name="tableContainer" native="true">
+                                                    <layout class="QVBoxLayout" name="tableContainerLayout">
+                                                        <property name="leftMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QWidget" name="TableWrapper" native="true">
+                                                                <layout class="QVBoxLayout" name="tableWrapperLayout">
+                                                                    <property name="leftMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="topMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="rightMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="bottomMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="spacing">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <item>
+                                                                        <widget class="QTableView" name="executionReportsTable"/>
+                                                                    </item>
+                                                                    <!-- Summary bar -->
+                                                                    <item>
+                                                                        <widget class="QWidget" name="TableSummary" native="true">
+                                                                            <property name="minimumSize">
+                                                                                <size>
+                                                                                    <width>0</width>
+                                                                                    <height>52</height>
+                                                                                </size>
+                                                                            </property>
+                                                                            <layout class="QHBoxLayout" name="summaryLayout">
+                                                                                <property name="leftMargin">
+                                                                                    <number>32</number>
+                                                                                </property>
+                                                                                <property name="topMargin">
+                                                                                    <number>0</number>
+                                                                                </property>
+                                                                                <property name="rightMargin">
+                                                                                    <number>32</number>
+                                                                                </property>
+                                                                                <property name="bottomMargin">
+                                                                                    <number>0</number>
+                                                                                </property>
+                                                                                <item>
+                                                                                    <widget class="QLabel" name="totLabel">
+                                                                                        <property name="text">
+                                                                                            <string>TOTAL</string>
+                                                                                        </property>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <widget class="QLabel" name="summaryTotalValue">
+                                                                                        <property name="text">
+                                                                                            <string>0</string>
+                                                                                        </property>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <widget class="QWidget" name="summaryDivider" native="true">
+                                                                                        <property name="minimumSize">
+                                                                                            <size>
+                                                                                                <width>1</width>
+                                                                                                <height>16</height>
+                                                                                            </size>
+                                                                                        </property>
+                                                                                        <property name="maximumSize">
+                                                                                            <size>
+                                                                                                <width>1</width>
+                                                                                                <height>16</height>
+                                                                                            </size>
+                                                                                        </property>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <widget class="QWidget" name="filledContainer" native="true">
+                                                                                        <layout class="QHBoxLayout" name="filledLayout">
+                                                                                            <property name="leftMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="topMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="rightMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="bottomMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="spacing">
+                                                                                                <number>8</number>
+                                                                                            </property>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="filledTitleLabel">
+                                                                                                    <property name="text">
+                                                                                                        <string>FILLED</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="summaryFilledValue">
+                                                                                                    <property name="text">
+                                                                                                        <string>0 ●</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                        </layout>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <widget class="QWidget" name="partialContainer" native="true">
+                                                                                        <layout class="QHBoxLayout" name="partialLayout">
+                                                                                            <property name="leftMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="topMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="rightMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="bottomMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="spacing">
+                                                                                                <number>8</number>
+                                                                                            </property>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="partialTitleLabel">
+                                                                                                    <property name="text">
+                                                                                                        <string>PARTIAL</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="summaryPartialValue">
+                                                                                                    <property name="text">
+                                                                                                        <string>0 ●</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                        </layout>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <widget class="QWidget" name="rejectedContainer" native="true">
+                                                                                        <layout class="QHBoxLayout" name="rejectedLayout">
+                                                                                            <property name="leftMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="topMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="rightMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="bottomMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="spacing">
+                                                                                                <number>8</number>
+                                                                                            </property>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="rejectedTitleLabel">
+                                                                                                    <property name="text">
+                                                                                                        <string>REJECTED</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="summaryRejectedValue">
+                                                                                                    <property name="text">
+                                                                                                        <string>0 ●</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                        </layout>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <widget class="QWidget" name="newContainer" native="true">
+                                                                                        <layout class="QHBoxLayout" name="newLayout">
+                                                                                            <property name="leftMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="topMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="rightMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="bottomMargin">
+                                                                                                <number>0</number>
+                                                                                            </property>
+                                                                                            <property name="spacing">
+                                                                                                <number>8</number>
+                                                                                            </property>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="newTitleLabel">
+                                                                                                    <property name="text">
+                                                                                                        <string>NEW</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                            <item>
+                                                                                                <widget class="QLabel" name="summaryNewValue">
+                                                                                                    <property name="text">
+                                                                                                        <string>0 ●</string>
+                                                                                                    </property>
+                                                                                                </widget>
+                                                                                            </item>
+                                                                                        </layout>
+                                                                                    </widget>
+                                                                                </item>
+                                                                                <item>
+                                                                                    <spacer name="summarySpacer">
+                                                                                        <property name="orientation">
+                                                                                            <enum>Qt::Horizontal</enum>
+                                                                                        </property>
+                                                                                        <property name="sizeHint" stdset="0">
+                                                                                            <size>
+                                                                                                <width>40</width>
+                                                                                                <height>20</height>
+                                                                                            </size>
+                                                                                        </property>
+                                                                                    </spacer>
+                                                                                </item>
+                                                                            </layout>
+                                                                        </widget>
+                                                                    </item>
+                                                                </layout>
+                                                            </widget>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                        </layout>
+                                    </widget>
+                                    <!-- Page 2: Manual Order Entry -->
+                                    <widget class="QWidget" name="manualEntryPage">
+                                        <layout class="QVBoxLayout" name="manualEntryPageLayout">
+                                            <property name="leftMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="topMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="rightMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="bottomMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="spacing">
+                                                <number>0</number>
+                                            </property>
+                                            <item>
+                                                <widget class="QWidget" name="manualEntryPageHeader" native="true">
+                                                    <property name="minimumSize">
+                                                        <size>
+                                                            <width>0</width>
+                                                            <height>88</height>
+                                                        </size>
+                                                    </property>
+                                                    <layout class="QHBoxLayout" name="manualEntryHeaderLayout">
+                                                        <property name="leftMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QWidget" name="manualEntryTitleContainer" native="true">
+                                                                <layout class="QVBoxLayout" name="manualEntryTitleLayout">
+                                                                    <property name="leftMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="topMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="rightMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="bottomMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="spacing">
+                                                                        <number>4</number>
+                                                                    </property>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="manualEntryTitle">
+                                                                            <property name="text">
+                                                                                <string>MANUAL ENTRY</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="manualEntrySubtitleLabel">
+                                                                            <property name="text">
+                                                                                <string>Submit manual orders to the engine</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                </layout>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="manualEntryHeaderSpacer">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>40</width>
+                                                                        <height>20</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                            <item>
+                                                <widget class="ManualOrderEntryWidget" name="manualEntryWidget" native="true"/>
+                                            </item>
+                                        </layout>
+                                    </widget>
+                                    <!-- Page 3: Performance Dashboard -->
+                                    <widget class="QWidget" name="performancePage">
+                                        <layout class="QVBoxLayout" name="performancePageLayout">
+                                            <property name="leftMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="topMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="rightMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="bottomMargin">
+                                                <number>0</number>
+                                            </property>
+                                            <property name="spacing">
+                                                <number>0</number>
+                                            </property>
+                                            <item>
+                                                <widget class="QWidget" name="performancePageHeader" native="true">
+                                                    <property name="minimumSize">
+                                                        <size>
+                                                            <width>0</width>
+                                                            <height>88</height>
+                                                        </size>
+                                                    </property>
+                                                    <layout class="QHBoxLayout" name="performanceHeaderLayout">
+                                                        <property name="leftMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                            <number>32</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                            <number>24</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QWidget" name="performanceTitleContainer" native="true">
+                                                                <layout class="QVBoxLayout" name="performanceTitleLayout">
+                                                                    <property name="leftMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="topMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="rightMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="bottomMargin">
+                                                                        <number>0</number>
+                                                                    </property>
+                                                                    <property name="spacing">
+                                                                        <number>4</number>
+                                                                    </property>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="performanceTitle">
+                                                                            <property name="text">
+                                                                                <string>PERFORMANCE DASHBOARD</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                    <item>
+                                                                        <widget class="QLabel" name="performanceSubtitleLabel">
+                                                                            <property name="text">
+                                                                                <string>Engine performance metrics</string>
+                                                                            </property>
+                                                                        </widget>
+                                                                    </item>
+                                                                </layout>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="performanceHeaderSpacer">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>40</width>
+                                                                        <height>20</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                    </layout>
+                                                </widget>
+                                            </item>
+                                            <item>
+                                                <widget class="PerformanceDashboard" name="performanceDashboard" native="true"/>
+                                            </item>
+                                        </layout>
+                                    </widget>
+                                </widget>
+                            </item>
+                            <!-- Bottom bar -->
+                            <item>
+                                <widget class="QWidget" name="BottomBar">
+                                    <property name="minimumSize">
+                                        <size>
+                                            <width>0</width>
+                                            <height>60</height>
+                                        </size>
+                                    </property>
+                                    <property name="maximumSize">
+                                        <size>
+                                            <width>16777215</width>
+                                            <height>60</height>
+                                        </size>
+                                    </property>
+                                    <layout class="QHBoxLayout" name="bottomBarLayout">
+                                        <property name="leftMargin">
+                                            <number>28</number>
+                                        </property>
+                                        <property name="topMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="rightMargin">
+                                            <number>28</number>
+                                        </property>
+                                        <property name="bottomMargin">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="spacing">
+                                            <number>24</number>
+                                        </property>
+                                        <item>
+                                            <widget class="QLabel" name="ordersProcessedValue">
+                                                <property name="text">
+                                                    <string/>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QWidget" name="bottomDivider1" native="true">
+                                                <property name="minimumSize">
+                                                    <size>
+                                                        <width>1</width>
+                                                        <height>16</height>
+                                                    </size>
+                                                </property>
+                                                <property name="maximumSize">
+                                                    <size>
+                                                        <width>1</width>
+                                                        <height>16</height>
+                                                    </size>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QLabel" name="reportsGeneratedValue">
+                                                <property name="text">
+                                                    <string/>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QWidget" name="bottomDivider2" native="true">
+                                                <property name="minimumSize">
+                                                    <size>
+                                                        <width>1</width>
+                                                        <height>16</height>
+                                                    </size>
+                                                </property>
+                                                <property name="maximumSize">
+                                                    <size>
+                                                        <width>1</width>
+                                                        <height>16</height>
+                                                    </size>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QLabel" name="lastRunDurationValue">
+                                                <property name="text">
+                                                    <string/>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <spacer name="bottomBarSpacer">
+                                                <property name="orientation">
+                                                    <enum>Qt::Horizontal</enum>
+                                                </property>
+                                                <property name="sizeHint" stdset="0">
+                                                    <size>
+                                                        <width>40</width>
+                                                        <height>20</height>
+                                                    </size>
+                                                </property>
+                                            </spacer>
+                                        </item>
+                                        <item>
+                                            <widget class="QLabel" name="engineStateValue">
+                                                <property name="text">
+                                                    <string/>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                </item>
+            </layout>
         </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="navHeader">
-         <property name="text"><string>NAVIGATION</string></property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="sidebarInstrumentsButton">
-         <property name="text"><string>  Instruments</string></property>
-         <property name="checkable"><bool>true</bool></property>
-         <property name="checked"><bool>false</bool></property>
-         <property name="navIcon" stdset="0"><bool>true</bool></property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="sidebarAnalyticsButton">
-         <property name="text"><string>  Analytics</string></property>
-         <property name="checkable"><bool>true</bool></property>
-         <property name="checked"><bool>true</bool></property>
-         <property name="navIcon" stdset="0"><bool>true</bool></property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="sidebarManualButton">
-         <property name="text"><string>  Manual Entry</string></property>
-         <property name="checkable"><bool>true</bool></property>
-         <property name="checked"><bool>false</bool></property>
-         <property name="navIcon" stdset="0"><bool>true</bool></property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="sidebarPerformanceButton">
-         <property name="text"><string>  Performance</string></property>
-         <property name="checkable"><bool>true</bool></property>
-         <property name="checked"><bool>false</bool></property>
-         <property name="navIcon" stdset="0"><bool>true</bool></property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="sidebarSpacer">
-         <property name="orientation"><enum>Qt::Vertical</enum></property>
-         <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="sidebarSupportButton">
-         <property name="text"><string>Support</string></property>
-         <property name="checkable"><bool>true</bool></property>
-         <property name="checked"><bool>false</bool></property>
-         <property name="navIcon" stdset="0"><bool>true</bool></property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <!-- Main content area -->
-    <item>
-     <widget class="QWidget" name="mainContent" native="true">
-      <layout class="QVBoxLayout" name="mainContentLayout">
-       <property name="leftMargin"><number>0</number></property>
-       <property name="topMargin"><number>0</number></property>
-       <property name="rightMargin"><number>0</number></property>
-       <property name="bottomMargin"><number>0</number></property>
-       <property name="spacing"><number>0</number></property>
-       <!-- Top bar -->
-       <item>
-        <widget class="QWidget" name="TopBar">
-         <property name="minimumSize"><size><width>0</width><height>64</height></size></property>
-         <property name="maximumSize"><size><width>16777215</width><height>64</height></size></property>
-         <layout class="QHBoxLayout" name="topBarLayout">
-          <property name="leftMargin"><number>32</number></property>
-          <property name="topMargin"><number>0</number></property>
-          <property name="rightMargin"><number>32</number></property>
-          <property name="bottomMargin"><number>0</number></property>
-          <item>
-           <spacer name="topBarSpacer">
-            <property name="orientation"><enum>Qt::Horizontal</enum></property>
-            <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="openCsvButton">
-            <property name="text"><string>Open CSV</string></property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="runEngineButton">
-            <property name="text"><string>Run Engine</string></property>
-            <property name="enabled"><bool>false</bool></property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <!-- Stacked widget with 4 pages -->
-       <item>
-        <widget class="QStackedWidget" name="stackedWidget">
-         <property name="currentIndex"><number>1</number></property>
-         <!-- Page 0: Order Book -->
-         <widget class="QWidget" name="orderBookPage">
-          <layout class="QVBoxLayout" name="orderBookPageLayout">
-           <property name="leftMargin"><number>0</number></property>
-           <property name="topMargin"><number>0</number></property>
-           <property name="rightMargin"><number>0</number></property>
-           <property name="bottomMargin"><number>0</number></property>
-           <property name="spacing"><number>0</number></property>
-           <item>
-            <widget class="QWidget" name="orderBookPageHeader" native="true">
-             <property name="minimumSize"><size><width>0</width><height>88</height></size></property>
-             <layout class="QHBoxLayout" name="orderBookHeaderLayout">
-              <property name="leftMargin"><number>32</number></property>
-              <property name="topMargin"><number>24</number></property>
-              <property name="rightMargin"><number>32</number></property>
-              <property name="bottomMargin"><number>24</number></property>
-              <item>
-               <widget class="QWidget" name="orderBookTitleContainer" native="true">
-                <layout class="QVBoxLayout" name="orderBookTitleLayout">
-                 <property name="leftMargin"><number>0</number></property>
-                 <property name="topMargin"><number>0</number></property>
-                 <property name="rightMargin"><number>0</number></property>
-                 <property name="bottomMargin"><number>0</number></property>
-                 <property name="spacing"><number>4</number></property>
-                 <item>
-                  <widget class="QLabel" name="orderTitle">
-                   <property name="text"><string>ORDER BOOK</string></property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="orderBookSubtitleLabel">
-                   <property name="text"><string>Live order book by instrument</string></property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="orderBookHeaderSpacer">
-                <property name="orientation"><enum>Qt::Horizontal</enum></property>
-                <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QComboBox" name="orderBookInstrumentCombo"/>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="orderBookTableContainer" native="true">
-             <layout class="QVBoxLayout" name="orderBookTableContainerLayout">
-              <property name="leftMargin"><number>24</number></property>
-              <property name="topMargin"><number>16</number></property>
-              <property name="rightMargin"><number>24</number></property>
-              <property name="bottomMargin"><number>24</number></property>
-              <item>
-               <widget class="OrderBookWidget" name="orderBookWidget" native="true"/>
-              </item>
-             </layout>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- Page 1: Execution Reports (inline table) -->
-         <widget class="QWidget" name="reportsPage">
-          <layout class="QVBoxLayout" name="reportsPageLayout">
-           <property name="leftMargin"><number>0</number></property>
-           <property name="topMargin"><number>0</number></property>
-           <property name="rightMargin"><number>0</number></property>
-           <property name="bottomMargin"><number>0</number></property>
-           <property name="spacing"><number>0</number></property>
-           <item>
-            <widget class="QWidget" name="reportsPageHeader" native="true">
-             <property name="minimumSize"><size><width>0</width><height>88</height></size></property>
-             <layout class="QHBoxLayout" name="reportsHeaderLayout">
-              <property name="leftMargin"><number>32</number></property>
-              <property name="topMargin"><number>24</number></property>
-              <property name="rightMargin"><number>32</number></property>
-              <property name="bottomMargin"><number>24</number></property>
-              <item>
-               <widget class="QWidget" name="reportsTitleContainer" native="true">
-                <layout class="QVBoxLayout" name="reportsTitleLayout">
-                 <property name="leftMargin"><number>0</number></property>
-                 <property name="topMargin"><number>0</number></property>
-                 <property name="rightMargin"><number>0</number></property>
-                 <property name="bottomMargin"><number>0</number></property>
-                 <property name="spacing"><number>4</number></property>
-                 <item>
-                  <widget class="QLabel" name="reportsTitle">
-                   <property name="text"><string>EXECUTION REPORTS</string></property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="reportsSubtitleLabel">
-                   <property name="text"><string>No reports yet</string></property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="reportsHeaderSpacer">
-                <property name="orientation"><enum>Qt::Horizontal</enum></property>
-                <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
-               </spacer>
-              </item>
-              <item alignment="Qt::AlignVCenter">
-               <widget class="QPushButton" name="exportCsvButton">
-                <property name="text"><string>Export CSV</string></property>
-                <property name="enabled"><bool>false</bool></property>
-                <property name="minimumSize"><size><width>120</width><height>36</height></size></property>
-                <property name="maximumSize"><size><width>160</width><height>36</height></size></property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="FilterBar" native="true">
-             <property name="minimumSize"><size><width>0</width><height>52</height></size></property>
-             <layout class="QHBoxLayout" name="filterBarLayout">
-              <property name="leftMargin"><number>32</number></property>
-              <property name="topMargin"><number>0</number></property>
-              <property name="rightMargin"><number>32</number></property>
-              <property name="bottomMargin"><number>0</number></property>
-              <property name="spacing"><number>12</number></property>
-              <item>
-               <widget class="QComboBox" name="instrumentFilter"/>
-              </item>
-              <item>
-               <widget class="QComboBox" name="statusFilter"/>
-              </item>
-              <item>
-               <widget class="QComboBox" name="sideFilter"/>
-              </item>
-              <item>
-               <spacer name="filterBarSpacer">
-                <property name="orientation"><enum>Qt::Horizontal</enum></property>
-                <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QLabel" name="showingResultsLabel">
-                <property name="text"><string>Showing 0 / 0 results</string></property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="tableContainer" native="true">
-             <layout class="QVBoxLayout" name="tableContainerLayout">
-              <property name="leftMargin"><number>24</number></property>
-              <property name="topMargin"><number>24</number></property>
-              <property name="rightMargin"><number>24</number></property>
-              <property name="bottomMargin"><number>24</number></property>
-              <item>
-               <widget class="QWidget" name="TableWrapper" native="true">
-                <layout class="QVBoxLayout" name="tableWrapperLayout">
-                 <property name="leftMargin"><number>0</number></property>
-                 <property name="topMargin"><number>0</number></property>
-                 <property name="rightMargin"><number>0</number></property>
-                 <property name="bottomMargin"><number>0</number></property>
-                 <property name="spacing"><number>0</number></property>
-                 <item>
-                  <widget class="QTableView" name="executionReportsTable"/>
-                 </item>
-                 <!-- Summary bar -->
-                 <item>
-                  <widget class="QWidget" name="TableSummary" native="true">
-                   <property name="minimumSize"><size><width>0</width><height>52</height></size></property>
-                   <layout class="QHBoxLayout" name="summaryLayout">
-                    <property name="leftMargin"><number>32</number></property>
-                    <property name="topMargin"><number>0</number></property>
-                    <property name="rightMargin"><number>32</number></property>
-                    <property name="bottomMargin"><number>0</number></property>
-                    <item>
-                     <widget class="QLabel" name="totLabel">
-                      <property name="text"><string>TOTAL</string></property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="summaryTotalValue">
-                      <property name="text"><string>0</string></property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QWidget" name="summaryDivider" native="true">
-                      <property name="minimumSize"><size><width>1</width><height>16</height></size></property>
-                      <property name="maximumSize"><size><width>1</width><height>16</height></size></property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QWidget" name="filledContainer" native="true">
-                      <layout class="QHBoxLayout" name="filledLayout">
-                       <property name="leftMargin"><number>0</number></property>
-                       <property name="topMargin"><number>0</number></property>
-                       <property name="rightMargin"><number>0</number></property>
-                       <property name="bottomMargin"><number>0</number></property>
-                       <property name="spacing"><number>8</number></property>
-                       <item>
-                        <widget class="QLabel" name="filledTitleLabel">
-                         <property name="text"><string>FILLED</string></property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QLabel" name="summaryFilledValue">
-                         <property name="text"><string>0 ●</string></property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QWidget" name="partialContainer" native="true">
-                      <layout class="QHBoxLayout" name="partialLayout">
-                       <property name="leftMargin"><number>0</number></property>
-                       <property name="topMargin"><number>0</number></property>
-                       <property name="rightMargin"><number>0</number></property>
-                       <property name="bottomMargin"><number>0</number></property>
-                       <property name="spacing"><number>8</number></property>
-                       <item>
-                        <widget class="QLabel" name="partialTitleLabel">
-                         <property name="text"><string>PARTIAL</string></property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QLabel" name="summaryPartialValue">
-                         <property name="text"><string>0 ●</string></property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QWidget" name="rejectedContainer" native="true">
-                      <layout class="QHBoxLayout" name="rejectedLayout">
-                       <property name="leftMargin"><number>0</number></property>
-                       <property name="topMargin"><number>0</number></property>
-                       <property name="rightMargin"><number>0</number></property>
-                       <property name="bottomMargin"><number>0</number></property>
-                       <property name="spacing"><number>8</number></property>
-                       <item>
-                        <widget class="QLabel" name="rejectedTitleLabel">
-                         <property name="text"><string>REJECTED</string></property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QLabel" name="summaryRejectedValue">
-                         <property name="text"><string>0 ●</string></property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QWidget" name="newContainer" native="true">
-                      <layout class="QHBoxLayout" name="newLayout">
-                       <property name="leftMargin"><number>0</number></property>
-                       <property name="topMargin"><number>0</number></property>
-                       <property name="rightMargin"><number>0</number></property>
-                       <property name="bottomMargin"><number>0</number></property>
-                       <property name="spacing"><number>8</number></property>
-                       <item>
-                        <widget class="QLabel" name="newTitleLabel">
-                         <property name="text"><string>NEW</string></property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QLabel" name="summaryNewValue">
-                         <property name="text"><string>0 ●</string></property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="summarySpacer">
-                      <property name="orientation"><enum>Qt::Horizontal</enum></property>
-                      <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- Page 2: Manual Order Entry -->
-         <widget class="ManualOrderEntryWidget" name="manualEntryWidget" native="true"/>
-         <!-- Page 3: Performance Dashboard -->
-         <widget class="PerformanceDashboard" name="performanceDashboard" native="true"/>
-        </widget>
-       </item>
-       <!-- Bottom bar -->
-       <item>
-        <widget class="QWidget" name="BottomBar">
-         <property name="minimumSize"><size><width>0</width><height>60</height></size></property>
-         <property name="maximumSize"><size><width>16777215</width><height>60</height></size></property>
-         <layout class="QHBoxLayout" name="bottomBarLayout">
-          <property name="leftMargin"><number>28</number></property>
-          <property name="topMargin"><number>0</number></property>
-          <property name="rightMargin"><number>28</number></property>
-          <property name="bottomMargin"><number>0</number></property>
-          <property name="spacing"><number>24</number></property>
-          <item>
-           <widget class="QLabel" name="ordersProcessedValue">
-            <property name="text"><string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="bottomDivider1" native="true">
-            <property name="minimumSize"><size><width>1</width><height>16</height></size></property>
-            <property name="maximumSize"><size><width>1</width><height>16</height></size></property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="reportsGeneratedValue">
-            <property name="text"><string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="bottomDivider2" native="true">
-            <property name="minimumSize"><size><width>1</width><height>16</height></size></property>
-            <property name="maximumSize"><size><width>1</width><height>16</height></size></property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="lastRunDurationValue">
-            <property name="text"><string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="bottomBarSpacer">
-            <property name="orientation"><enum>Qt::Horizontal</enum></property>
-            <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="engineStateValue">
-            <property name="text"><string/>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-   </layout>
-  </widget>
- </widget>
- <customwidgets>
-  <customwidget>
-   <class>OrderBookWidget</class>
-   <extends>QWidget</extends>
-   <header>orderbook_widget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ManualOrderEntryWidget</class>
-   <extends>QWidget</extends>
-   <header>order_entry_widget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>PerformanceDashboard</class>
-   <extends>QWidget</extends>
-   <header>performance_dashboard.h</header>
-  </customwidget>
- </customwidgets>
- <resources/>
- <connections/>
+    </widget>
+    <customwidgets>
+        <customwidget>
+            <class>OrderBookWidget</class>
+            <extends>QWidget</extends>
+            <header>orderbook_widget.h</header>
+        </customwidget>
+        <customwidget>
+            <class>ManualOrderEntryWidget</class>
+            <extends>QWidget</extends>
+            <header>order_entry_widget.h</header>
+        </customwidget>
+        <customwidget>
+            <class>PerformanceDashboard</class>
+            <extends>QWidget</extends>
+            <header>performance_dashboard.h</header>
+        </customwidget>
+    </customwidgets>
+    <resources/>
+    <connections/>
 </ui>

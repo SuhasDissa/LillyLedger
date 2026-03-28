@@ -82,14 +82,14 @@ OrderBookWidget::OrderBookWidget(QWidget *parent) : QWidget(parent), ui_(new Ui:
         "  letter-spacing: 0.5px;"
         "}");
     ui_->spreadLabel->setStyleSheet("QLabel {"
-                                    "  color: #86522b;"
-                                    "  font-weight: 600;"
-                                    "  font-size: 12px;"
-                                    "  font-family: 'Courier New', 'Consolas', monospace;"
-                                    "  background-color: #fdf4ee;"
-                                    "  border: 1px solid #ddc4ae;"
+                                    "  color: #52443c;"
+                                    "  font-weight: 700;"
+                                    "  font-size: 11px;"
+                                    "  background-color: #f4ece8;"
+                                    "  border: 1px solid #d6c3b7;"
                                     "  border-radius: 6px;"
-                                    "  padding: 3px 12px;"
+                                    "  padding: 4px 10px;"
+                                    "  letter-spacing: 0.5px;"
                                     "}");
     setupBookTable(ui_->bookTable);
     connect(ui_->bookTable, &QTableWidget::cellClicked, this, [this](int row, int column) {
@@ -113,27 +113,28 @@ OrderBookWidget::OrderBookWidget(QWidget *parent) : QWidget(parent), ui_(new Ui:
         }
         emit priceClicked(price, side);
     });
-    setStyleSheet("OrderBookWidget { background-color: #faf8f4; }"
+    setStyleSheet("OrderBookWidget { background-color: #fff8f5; }"
                   "QTableWidget {"
                   "  background-color: #ffffff;"
-                  "  border: 1px solid #ead8ce;"
-                  "  border-radius: 8px;"
-                  "  gridline-color: #f0e8e2;"
-                  "  color: #1e1b19;"
+                  "  border: 1px solid #ffffff;"
+                  "  border-radius: 4px;"
+                  "  gridline-color: #ffffff;"
+                  "  color: #000000;"
                   "  font-family: 'Courier New', 'Consolas', monospace;"
                   "  font-size: 12px;"
                   "}"
                   "QHeaderView::section {"
-                  "  background-color: #f5ede7;"
-                  "  color: #7a6a5e;"
+                  "  background-color: #f4ece8;"
+                  "  color: #52443c;"
                   "  border: none;"
-                  "  border-bottom: 1.5px solid #ead8ce;"
-                  "  border-right: 1px solid #ead8ce;"
+                  "  border-bottom: 1px solid #d6c3b7;"
+                  "  border-right: 1px solid #d6c3b7;"
                   "  padding: 8px 8px;"
                   "  font-weight: 700;"
                   "  font-size: 10px;"
-                  "  font-family: 'DM Sans', 'Segoe UI', sans-serif;"
-                  "  letter-spacing: 0.5px;"
+                  "  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;"
+                  "  letter-spacing: 1px;"
+                  "  text-transform: uppercase;"
                   "}");
 }
 
@@ -180,11 +181,11 @@ void OrderBookWidget::setupBookTable(QTableWidget *table) {
         }
         headerItem->setTextAlignment(Qt::AlignCenter);
         if (col <= kBuyPriceColumn) {
-            headerItem->setBackground(QColor("#2d6b4a")); // deep botanical green — buy side
+            headerItem->setBackground(QColor("#9cb1ff")); // light blue — buy side
         } else {
-            headerItem->setBackground(QColor("#9e3a3a")); // deep dried rose — sell side
+            headerItem->setBackground(QColor("#ff68d9")); // rose — sell side
         }
-        headerItem->setForeground(QColor("#ffffff"));
+        headerItem->setForeground(QColor("#000000"));
     }
 
     table->setStyleSheet(tableStyle());
@@ -232,15 +233,15 @@ void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
                                                                 static_cast<int>(askRows.size())));
     ui_->bookTable->setRowCount(rowCount);
 
-    // Warm editorial palette — green tints for bids, rose tints for asks
-    const QColor buyNear("#e8f4ee");   // lightest green (best bid — closest to spread)
-    const QColor buyFar("#c8e6d5");    // deeper green (far from spread)
-    const QColor buyText("#1a4a30");   // deep botanical green text
-    const QColor sellNear("#fdf0f0");  // lightest rose (best ask)
-    const QColor sellFar("#f5d4d4");   // deeper rose (far from spread)
-    const QColor sellText("#6b1f1f");  // deep dried rose text
-    const QColor buyBlank("#f5faf7");  // empty bid cell — very faint green
-    const QColor sellBlank("#fdf8f8"); // empty ask cell — very faint rose
+    // HTML theme palette — blue tints for bids, rose tints for asks
+    const QColor buyNear("#9cb1ff");   // light blue
+    const QColor buyFar("#9cb1ff");    // light blue
+    const QColor buyText("#000000");   // black text
+    const QColor sellNear("#ff68d9");  // rose
+    const QColor sellFar("#ff68d9");   // rose
+    const QColor sellText("#000000");  // black text
+    const QColor buyBlank("#9cb1ff");  // light blue
+    const QColor sellBlank("#ff68d9"); // rose
 
     std::map<QString, uint64_t> currentBidQtyByOrderId;
     std::map<QString, uint64_t> currentAskQtyByOrderId;

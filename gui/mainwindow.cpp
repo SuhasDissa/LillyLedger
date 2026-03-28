@@ -50,29 +50,40 @@ QString fixedCharToQString(const char *text, std::size_t maxLen) {
 
 QString instrumentName(Instrument instrument) {
     switch (instrument) {
-    case Instrument::Rose:     return "🌹 Rose";
-    case Instrument::Lavender: return "💜 Lavender";
-    case Instrument::Lotus:    return "🪷 Lotus";
-    case Instrument::Tulip:    return "🌷 Tulip";
-    case Instrument::Orchid:   return "🌸 Orchid";
+    case Instrument::Rose:
+        return "🌹 Rose";
+    case Instrument::Lavender:
+        return "💜 Lavender";
+    case Instrument::Lotus:
+        return "🪷 Lotus";
+    case Instrument::Tulip:
+        return "🌷 Tulip";
+    case Instrument::Orchid:
+        return "🌸 Orchid";
     }
     return "Unknown";
 }
 
 QString sideName(Side side) {
     switch (side) {
-    case Side::Buy:  return "BUY";
-    case Side::Sell: return "SELL";
+    case Side::Buy:
+        return "BUY";
+    case Side::Sell:
+        return "SELL";
     }
     return "Unknown";
 }
 
 QString statusName(Status status) {
     switch (status) {
-    case Status::New:      return "NEW";
-    case Status::Rejected: return "REJECTED";
-    case Status::Fill:     return "FILL";
-    case Status::PFill:    return "PFILL";
+    case Status::New:
+        return "NEW";
+    case Status::Rejected:
+        return "REJECTED";
+    case Status::Fill:
+        return "FILL";
+    case Status::PFill:
+        return "PFILL";
     }
     return "Unknown";
 }
@@ -101,30 +112,39 @@ QString compactTransactTime(const char *text) {
 
 QColor rowBackgroundForStatus(Status status) {
     switch (status) {
-    case Status::New:      return QColor("#f7f9fd");
-    case Status::Fill:     return QColor("#f5faf7");
-    case Status::PFill:    return QColor("#fdf8f4");
-    case Status::Rejected: return QColor("#fdf5f5");
+    case Status::New:
+        return QColor("#faf2ee"); // surface-container-low
+    case Status::Fill:
+        return QColor("#f4ece8"); // surface-container
+    case Status::PFill:
+        return QColor("#ffdcc6"); // primary-fixed
+    case Status::Rejected:
+        return QColor("#ffdad6"); // error-container
     }
     return QColor("#ffffff");
 }
 
 QColor rowStatusColor(Status status) {
     switch (status) {
-    case Status::New:      return QColor("#5b8fcf");
-    case Status::Fill:     return QColor("#2d6b4a");
-    case Status::PFill:    return QColor("#c2855a");
-    case Status::Rejected: return QColor("#b84a4a");
+    case Status::New:
+        return QColor("#84746a"); // outline
+    case Status::Fill:
+        return QColor("#2c694d"); // secondary
+    case Status::PFill:
+        return QColor("#86522b"); // primary
+    case Status::Rejected:
+        return QColor("#a33b3c"); // tertiary
     }
     return QColor("#52443c");
 }
 
 QColor sideBackground(Side side) {
-    return side == Side::Buy ? QColor("#e8f4ee") : QColor("#fdf0f0");
+    return side == Side::Buy ? QColor("#b0f1cc")
+                             : QColor("#ffdad6"); // secondary-container / error-container
 }
 
 QColor sideForeground(Side side) {
-    return side == Side::Buy ? QColor("#2d6b4a") : QColor("#9e3a3a");
+    return side == Side::Buy ? QColor("#2c694d") : QColor("#a33b3c"); // secondary / tertiary
 }
 
 // ── Virtual model for the execution-reports table ────────────────────────────
@@ -135,8 +155,7 @@ class ExecutionReportTableModel : public QAbstractTableModel {
   public:
     static constexpr int kColCount = 7;
 
-    explicit ExecutionReportTableModel(QObject *parent = nullptr)
-        : QAbstractTableModel(parent) {}
+    explicit ExecutionReportTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
 
     void setReports(std::vector<const ExecutionReport *> rows) {
         beginResetModel();
@@ -159,8 +178,8 @@ class ExecutionReportTableModel : public QAbstractTableModel {
             return {};
         }
         static const std::array<const char *, kColCount> kHeaders = {
-            "Order ID", "Client Order ID", "Instrument", "Side",
-            "Exec Status", "Quantity",      "Price"};
+            "Order ID",    "Client Order ID", "Instrument", "Side",
+            "Exec Status", "Quantity",        "Price"};
         return QString(kHeaders[section]);
     }
 
@@ -210,14 +229,22 @@ class ExecutionReportTableModel : public QAbstractTableModel {
   private:
     static QVariant displayData(const ExecutionReport &r, int col) {
         switch (col) {
-        case 0: return fixedCharToQString(r.orderId, kOrderIdLen);
-        case 1: return fixedCharToQString(r.clientOrderId, kClientOrderIdLen);
-        case 2: return instrumentName(r.instrument);
-        case 3: return sideName(r.side);
-        case 4: return statusName(r.status);
-        case 5: return QLocale().toString(r.quantity);
-        case 6: return QLocale().toString(r.price, 'f', 2);
-        default: return {};
+        case 0:
+            return fixedCharToQString(r.orderId, kOrderIdLen);
+        case 1:
+            return fixedCharToQString(r.clientOrderId, kClientOrderIdLen);
+        case 2:
+            return instrumentName(r.instrument);
+        case 3:
+            return sideName(r.side);
+        case 4:
+            return statusName(r.status);
+        case 5:
+            return QLocale().toString(r.quantity);
+        case 6:
+            return QLocale().toString(r.price, 'f', 2);
+        default:
+            return {};
         }
     }
 
@@ -282,6 +309,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
     ui_->reportsSubtitleLabel->setObjectName("PageSubtitle");
     ui_->reportsTitle->setObjectName("PageTitle");
     ui_->orderTitle->setObjectName("PageTitle");
+    ui_->orderBookSubtitleLabel->setObjectName("PageSubtitle");
+    ui_->manualEntryTitle->setObjectName("PageTitle");
+    ui_->manualEntrySubtitleLabel->setObjectName("PageSubtitle");
+    ui_->performanceTitle->setObjectName("PageTitle");
+    ui_->performanceSubtitleLabel->setObjectName("PageSubtitle");
     ui_->showingResultsLabel->setObjectName("ResultsLabel");
     ui_->totLabel->setObjectName("SummaryLabel");
     ui_->summaryTotalValue->setObjectName("SummaryValue");
@@ -291,30 +323,33 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
     ui_->engineStateValue->setObjectName("BottomMetricState");
     ui_->orderBookPageHeader->setObjectName("PageHeader");
     ui_->reportsPageHeader->setObjectName("PageHeader");
+    ui_->manualEntryPageHeader->setObjectName("PageHeader");
+    ui_->performancePageHeader->setObjectName("PageHeader");
     ui_->navHeader->setStyleSheet("QLabel {"
-                                  "  color: #4a3f38;"
+                                  "  color: #52443c;"
                                   "  font-size: 9px;"
                                   "  font-weight: 700;"
-                                  "  letter-spacing: 2px;"
+                                  "  letter-spacing: 2.5px;"
                                   "  padding: 0px 18px;"
                                   "  margin-bottom: 4px;"
+                                  "  text-transform: uppercase;"
                                   "}");
 
     // Divider styles
     ui_->summaryDivider->setStyleSheet(
-        "background-color: #e8e2d9; margin-left: 24px; margin-right: 24px;");
-    ui_->bottomDivider1->setStyleSheet("background-color: #ddd0c6;");
-    ui_->bottomDivider2->setStyleSheet("background-color: #ddd0c6;");
+        "background-color: #d6c3b7; margin-left: 24px; margin-right: 24px;");
+    ui_->bottomDivider1->setStyleSheet("background-color: #d6c3b7;");
+    ui_->bottomDivider2->setStyleSheet("background-color: #d6c3b7;");
 
     // Summary value styles
-    ui_->summaryFilledValue->setStyleSheet(
-        "font-weight: 600; font-size: 12px; font-family: 'IBM Plex Mono'; color: #2c694d;");
-    ui_->summaryPartialValue->setStyleSheet(
-        "font-weight: 600; font-size: 12px; font-family: 'IBM Plex Mono'; color: #c2855a;");
-    ui_->summaryRejectedValue->setStyleSheet(
-        "font-weight: 600; font-size: 12px; font-family: 'IBM Plex Mono'; color: #a33b3c;");
-    ui_->summaryNewValue->setStyleSheet(
-        "font-weight: 600; font-size: 12px; font-family: 'IBM Plex Mono'; color: #5b8fcf;");
+    ui_->summaryFilledValue->setStyleSheet("font-weight: 700; font-size: 12px; font-family: "
+                                           "'Courier New', monospace; color: #2c694d;");
+    ui_->summaryPartialValue->setStyleSheet("font-weight: 700; font-size: 12px; font-family: "
+                                            "'Courier New', monospace; color: #86522b;");
+    ui_->summaryRejectedValue->setStyleSheet("font-weight: 700; font-size: 12px; font-family: "
+                                             "'Courier New', monospace; color: #a33b3c;");
+    ui_->summaryNewValue->setStyleSheet("font-weight: 700; font-size: 12px; font-family: 'Courier "
+                                        "New', monospace; color: #84746a;");
 
     // Populate combo boxes
     ui_->orderBookInstrumentCombo->addItem("Rose", static_cast<int>(Instrument::Rose));
@@ -454,15 +489,51 @@ void MainWindow::applyLightTheme() {
 
     qApp->setStyleSheet(R"(
 
-/* ── Reset & base ──────────────────────────────────────────────────── */
-QMainWindow, QDialog { background-color: #faf8f4; }
+/* ══════════════════════════════════════════════════════════════════════
+   LillyLedger — Qt stylesheet
+   Palette lifted verbatim from the HTML reference design.
 
-/* Single authoritative font size — do NOT set font-size on QWidget globally.
-   Instead set it per-widget type to avoid the cascade fight. */
-QLabel      { font-size: 13px; color: #3b312b; font-family: 'DM Sans', 'Segoe UI', sans-serif; }
-QPushButton { font-size: 13px; font-family: 'DM Sans', 'Segoe UI', sans-serif; min-height: 36px; }
-QComboBox   { font-size: 13px; font-family: 'DM Sans', 'Segoe UI', sans-serif; min-height: 36px; }
-QLineEdit   { font-size: 13px; font-family: 'DM Sans', 'Segoe UI', sans-serif; min-height: 36px; }
+   Token map (HTML → QSS hex):
+     background / surface              #fff8f5
+     surface-container-lowest          #ffffff
+     surface-container-low             #faf2ee
+     surface-container                 #f4ece8
+     surface-container-high            #eee7e3
+     surface-container-highest         #e9e1dd
+     surface-dim                       #e0d8d5
+     surface-variant                   #e9e1dd
+     on-surface                        #1e1b19
+     on-surface-variant                #52443c
+     outline                           #84746a
+     outline-variant                   #d6c3b7
+     primary                           #86522b
+     primary-container                 #c2855a
+     primary-fixed                     #ffdcc6
+     primary-fixed-dim                 #fcb889
+     on-primary                        #ffffff
+     on-primary-container              #482100
+     secondary                         #2c694d
+     secondary-container               #b0f1cc
+     on-secondary-container            #327052
+     tertiary                          #a33b3c
+     error                             #ba1a1a
+     inverse-surface (sidebar)         #33302d  ← darkest panel
+     sidebar bg                        #1c1917  ← near-black brown
+
+   Shape scale (from HTML tailwind config):
+     DEFAULT  2px   ← nearly square
+     lg       4px   ← subtle round
+     xl       8px   ← inputs, buttons
+     full    12px   ← pills / toggles
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Reset & base ──────────────────────────────────────────────────── */
+QMainWindow, QDialog { background-color: #fff8f5; }
+
+QLabel      { font-size: 13px; color: #1e1b19; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; }
+QPushButton { font-size: 13px; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; min-height: 36px; }
+QComboBox   { font-size: 13px; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; min-height: 36px; }
+QLineEdit   { font-size: 13px; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; min-height: 36px; }
 QSpinBox, QDoubleSpinBox {
     font-size: 13px;
     font-family: 'Courier New', 'Consolas', monospace;
@@ -478,12 +549,14 @@ QSpinBox, QDoubleSpinBox {
     font-size: 22px;
     font-style: italic;
     font-weight: 400;
+    letter-spacing: 0.5px;
 }
 #LogoSubtitle {
-    color: #7a6a5e;
+    color: #52443c;
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
 QPushButton[navIcon="true"] {
@@ -491,49 +564,31 @@ QPushButton[navIcon="true"] {
     padding: 11px 18px;
     border: none;
     border-radius: 0px;
-    color: #8a7a6e;
+    color: #84746a;
     font-weight: 500;
     font-size: 13px;
     background-color: transparent;
     min-height: 44px;
 }
 QPushButton[navIcon="true"]:hover {
-    background-color: #2a2522;
-    color: #d4c9b8;
+    background-color: #33302d;
+    color: #e9e1dd;
 }
 QPushButton[navIcon="true"]:checked {
     color: #ffffff;
-    font-weight: 600;
-    background-color: #2a2522;
-    border-left: 3px solid #c2855a;
-    padding-left: 15px;
+    font-weight: 700;
+    background-color: #33302d;
+    border-left: 2px solid #c2855a;
+    padding-left: 16px;
 }
 
 /* ── Top bar ───────────────────────────────────────────────────────── */
 #TopBar {
-    background-color: #ffffff;
-    border-bottom: 1px solid #e8e2d9;
+    background-color: #fff8f5;
+    border-bottom: 1px solid #d6c3b7;
 }
 
-#TopTabBtn {
-    border: none;
-    border-bottom: 3px solid transparent;
-    background: transparent;
-    color: #9a8a7e;
-    font-weight: 500;
-    font-size: 13px;
-    padding: 0px 4px;
-    margin: 0px 2px;
-    min-height: 64px;
-    min-width: 80px;
-}
-#TopTabBtn:hover  { color: #86522b; }
-#TopTabBtn:checked {
-    color: #6b3d18;
-    border-bottom: 3px solid #c2855a;
-    font-weight: 700;
-}
-
+/* ── Open CSV / Run Engine buttons ─────────────────────────────────── */
 #OpenCsvBtn {
     border: 1.5px solid #c2855a;
     border-radius: 8px;
@@ -541,11 +596,13 @@ QPushButton[navIcon="true"]:checked {
     background-color: transparent;
     font-weight: 700;
     font-size: 12px;
+    letter-spacing: 0.5px;
     padding: 0px 18px;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 90px;
 }
-#OpenCsvBtn:hover { background-color: #fdf4ee; }
+#OpenCsvBtn:hover  { background-color: #ffdcc6; }
+#OpenCsvBtn:pressed { background-color: #fcb889; }
 
 #RunEngineBtn {
     background-color: #86522b;
@@ -554,62 +611,65 @@ QPushButton[navIcon="true"]:checked {
     color: #ffffff;
     font-weight: 700;
     font-size: 12px;
+    letter-spacing: 0.5px;
     padding: 0px 18px;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 100px;
 }
-#RunEngineBtn:hover    { background-color: #74461f; }
-#RunEngineBtn:pressed  { background-color: #613a19; }
-#RunEngineBtn:disabled { background-color: #d6c3b7; color: #f0e8e2; }
+#RunEngineBtn:hover    { background-color: #6a3b16; }
+#RunEngineBtn:pressed  { background-color: #482100; }
+#RunEngineBtn:disabled { background-color: #e0d8d5; color: #84746a; }
 
 /* ── Page headers ──────────────────────────────────────────────────── */
 #PageHeader {
-    background-color: #ffffff;
-    border-bottom: 1px solid #e8e2d9;
+    background-color: #fff8f5;
+    border-bottom: 1px solid #d6c3b7;
 }
 #PageTitle {
     color: #1e1b19;
     font-family: 'Georgia', 'Palatino Linotype', serif;
     font-size: 18px;
     font-weight: 400;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 #PageSubtitle {
-    color: #9a8a7e;
-    font-size: 12px;
+    color: #84746a;
+    font-size: 11px;
     font-weight: 400;
+    letter-spacing: 0.5px;
 }
 #ExportCsvBtn {
     color: #86522b;
     font-weight: 700;
     font-size: 12px;
+    letter-spacing: 0.5px;
     border: 1.5px solid #c2855a;
     border-radius: 8px;
     background: transparent;
     padding: 0px 14px;
     min-height: 34px;
 }
-#ExportCsvBtn:hover    { background-color: #fdf4ee; }
-#ExportCsvBtn:disabled { color: #c4b4aa; border-color: #e0d0c8; }
+#ExportCsvBtn:hover    { background-color: #ffdcc6; }
+#ExportCsvBtn:disabled { color: #d6c3b7; border-color: #e0d8d5; }
 
 /* ── Filter bar ────────────────────────────────────────────────────── */
 #FilterBar {
-    background-color: #f5ede7;
-    border-bottom: 1px solid #ead8ce;
+    background-color: #f4ece8;
+    border-bottom: 1px solid #d6c3b7;
 }
 
 QComboBox {
     background-color: #ffffff;
-    border: 1.5px solid #ddd0c6;
-    border-radius: 8px;
+    border: 1px solid #d6c3b7;
+    border-radius: 4px;
     padding: 0px 10px;
-    color: #3b312b;
+    color: #1e1b19;
     font-weight: 500;
     font-size: 12px;
     min-height: 34px;
 }
-QComboBox:hover { border-color: #c2855a; }
-QComboBox:focus { border-color: #c2855a; }
+QComboBox:hover { border-color: #86522b; }
+QComboBox:focus { border-color: #86522b; }
 QComboBox::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
@@ -625,67 +685,70 @@ QComboBox::down-arrow {
 }
 QComboBox QAbstractItemView {
     background-color: #ffffff;
-    color: #3b312b;
-    border: 1px solid #ddd0c6;
-    border-radius: 4px;
-    selection-background-color: #f5ede7;
+    color: #1e1b19;
+    border: 1px solid #d6c3b7;
+    border-radius: 2px;
+    selection-background-color: #f4ece8;
     selection-color: #1e1b19;
     outline: 0px;
     padding: 4px;
 }
 
 #ResultsLabel {
-    color: #9a8a7e;
+    color: #84746a;
     font-weight: 500;
     font-size: 11px;
+    letter-spacing: 0.3px;
 }
 
 /* ── Tables ────────────────────────────────────────────────────────── */
 #TableWrapper {
     background-color: #ffffff;
-    border: 1px solid #ead8ce;
-    border-radius: 10px;
+    border: 1px solid #d6c3b7;
+    border-radius: 4px;
 }
-QTableView {
+#executionReportsTable {
     border: none;
     background-color: transparent;
-    gridline-color: #f0e8e2;
+    gridline-color: #eee7e3;
     font-size: 13px;
-    color: #3b312b;
-    font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    color: #1e1b19;
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
 }
-QTableView::item {
+#executionReportsTable::item {
     padding: 4px 12px;
-    border-bottom: 1px solid #f0e8e2;
+    border-bottom: 1px solid #eee7e3;
 }
-QTableView::item:selected {
-    background-color: #fdf4ee;
+#executionReportsTable::item:selected {
+    background-color: #ffdcc6;
     color: #1e1b19;
 }
-QHeaderView::section {
-    background-color: #f5ede7;
-    color: #7a6a5e;
+#executionReportsTable QHeaderView::section {
+    background-color: #f4ece8;
+    color: #52443c;
     border: none;
-    border-bottom: 1.5px solid #ead8ce;
-    border-right: 1px solid #ead8ce;
+    border-bottom: 1px solid #d6c3b7;
+    border-right: 1px solid #d6c3b7;
     padding: 8px 12px;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    font-family: 'DM Sans', 'Segoe UI', sans-serif;
-}
-QHeaderView::section:last { border-right: none; }
-
-/* ── Summary bar ───────────────────────────────────────────────────── */
-#TableSummary {
-    background-color: #faf8f4;
-    border-top: 1px solid #ead8ce;
-}
-#SummaryLabel {
-    color: #9a8a7e;
     font-weight: 700;
     font-size: 10px;
     letter-spacing: 1px;
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    text-transform: uppercase;
+}
+#executionReportsTable QHeaderView::section:last { border-right: none; }
+
+/* ── Summary bar ───────────────────────────────────────────────────── */
+#TableSummary {
+    background-color: #faf2ee;
+    border-top: 1px solid #d6c3b7;
+}
+#SummaryLabel {
+    color: #84746a;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
 }
 #SummaryValue {
     color: #1e1b19;
@@ -694,30 +757,30 @@ QHeaderView::section:last { border-right: none; }
     font-size: 14px;
 }
 
-/* ── Scrollbars — keep them subtle and on-theme ─────────────────────── */
+/* ── Scrollbars ─────────────────────────────────────────────────────── */
 QScrollBar:vertical {
-    background: #faf8f4;
-    width: 8px;
+    background: #faf2ee;
+    width: 6px;
     margin: 0;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 QScrollBar::handle:vertical {
     background: #d6c3b7;
-    border-radius: 4px;
+    border-radius: 3px;
     min-height: 32px;
 }
 QScrollBar::handle:vertical:hover { background: #c2855a; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
 
 QScrollBar:horizontal {
-    background: #faf8f4;
-    height: 8px;
+    background: #faf2ee;
+    height: 6px;
     margin: 0;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 QScrollBar::handle:horizontal {
     background: #d6c3b7;
-    border-radius: 4px;
+    border-radius: 3px;
     min-width: 32px;
 }
 QScrollBar::handle:horizontal:hover { background: #c2855a; }
@@ -726,24 +789,24 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
 /* ── Input fields ──────────────────────────────────────────────────── */
 QLineEdit {
     background-color: #ffffff;
-    border: 1.5px solid #ddd0c6;
+    border: 1px solid #d6c3b7;
     border-radius: 8px;
     padding: 0px 12px;
     color: #1e1b19;
-    selection-background-color: #f5ede7;
+    selection-background-color: #ffdcc6;
 }
 QLineEdit:hover { border-color: #c2855a; }
-QLineEdit:focus { border-color: #86522b; }
+QLineEdit:focus { border-color: #86522b; border-width: 1.5px; }
 
 QSpinBox, QDoubleSpinBox {
     background-color: #ffffff;
-    border: 1.5px solid #ddd0c6;
+    border: 1px solid #d6c3b7;
     border-radius: 8px;
     padding: 0px 8px;
     color: #1e1b19;
 }
 QSpinBox:hover, QDoubleSpinBox:hover   { border-color: #c2855a; }
-QSpinBox:focus, QDoubleSpinBox:focus   { border-color: #86522b; }
+QSpinBox:focus, QDoubleSpinBox:focus   { border-color: #86522b; border-width: 1.5px; }
 QSpinBox::up-button, QDoubleSpinBox::up-button,
 QSpinBox::down-button, QDoubleSpinBox::down-button {
     width: 20px;
@@ -754,14 +817,15 @@ QSpinBox::down-button, QDoubleSpinBox::down-button {
 /* ── QGroupBox (used in Manual Entry) ─────────────────────────────── */
 QGroupBox {
     background-color: #ffffff;
-    border: 1px solid #ead8ce;
-    border-radius: 10px;
+    border: 1px solid #d6c3b7;
+    border-radius: 4px;
     margin-top: 14px;
     padding: 16px 20px 20px 20px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    color: #9a8a7e;
-    letter-spacing: 1px;
+    color: #84746a;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
 }
 QGroupBox::title {
     subcontrol-origin: margin;
@@ -769,28 +833,30 @@ QGroupBox::title {
     left: 16px;
     top: 0px;
     padding: 0px 6px;
-    background-color: #faf8f4;
-    color: #9a8a7e;
-    font-size: 10px;
+    background-color: #fff8f5;
+    color: #84746a;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 /* ── Bottom status bar ─────────────────────────────────────────────── */
 #BottomBar {
-    background-color: #ffffff;
-    border-top: 1px solid #e8e2d9;
+    background-color: #fff8f5;
+    border-top: 1px solid #d6c3b7;
 }
 #BottomMetricMuted, #BottomMetricPositive, #BottomMetricState {
     font-weight: 600;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    text-transform: uppercase;
 }
-#BottomMetricMuted    { color: #9a8a7e; }
+#BottomMetricMuted    { color: #84746a; }
 #BottomMetricPositive { color: #2c694d; }
 #BottomMetricState[engineState="idle"]    { color: #2c694d; }
-#BottomMetricState[engineState="running"] { color: #c2855a; }
+#BottomMetricState[engineState="running"] { color: #86522b; }
 #BottomMetricState[engineState="error"]   { color: #a33b3c; }
 
     )");
@@ -1041,4 +1107,3 @@ Instrument MainWindow::selectedInstrument() const {
     }
     return Instrument::Rose;
 }
-

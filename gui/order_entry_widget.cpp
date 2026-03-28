@@ -32,9 +32,9 @@ BuySellToggle::BuySellToggle(QWidget *parent) : QWidget(parent) {
     layout->addWidget(sellButton_);
 
     setStyleSheet("BuySellToggle {"
-                  "  background-color: #f5ede7;"
-                  "  border: 1.5px solid #ddd0c6;"
-                  "  border-radius: 8px;"
+                  "  background-color: #eee7e3;"
+                  "  border: 1px solid #d6c3b7;"
+                  "  border-radius: 12px;"
                   "}");
 
     connect(buyButton_, &QPushButton::clicked, this, [this]() { setSide(Side::Buy); });
@@ -64,19 +64,19 @@ void BuySellToggle::updateStyles() {
 
     if (currentSide_ == Side::Buy) {
         buyButton_->setStyleSheet("QPushButton {"
-                                  "  background-color: #d4eddf;"
-                                  "  color: #1e3a2a;"
+                                  "  background-color: #b0f1cc;"
+                                  "  color: #002113;"
                                   "  border: none;"
-                                  "  border-radius: 6px;"
+                                  "  border-radius: 10px;"
                                   "  font-weight: 700;"
                                   "  font-size: 13px;"
-                                  "  letter-spacing: 0.5px;"
+                                  "  letter-spacing: 1px;"
                                   "}");
         sellButton_->setStyleSheet("QPushButton {"
                                    "  background-color: transparent;"
-                                   "  color: #9a8a7e;"
+                                   "  color: #84746a;"
                                    "  border: none;"
-                                   "  border-radius: 6px;"
+                                   "  border-radius: 10px;"
                                    "  font-weight: 500;"
                                    "  font-size: 13px;"
                                    "}");
@@ -85,20 +85,20 @@ void BuySellToggle::updateStyles() {
 
     buyButton_->setStyleSheet("QPushButton {"
                               "  background-color: transparent;"
-                              "  color: #9a8a7e;"
+                              "  color: #84746a;"
                               "  border: none;"
-                              "  border-radius: 6px;"
+                              "  border-radius: 10px;"
                               "  font-weight: 500;"
                               "  font-size: 13px;"
                               "}");
     sellButton_->setStyleSheet("QPushButton {"
-                               "  background-color: #f9dede;"
-                               "  color: #7a1f1f;"
+                               "  background-color: #ffdad6;"
+                               "  color: #410006;"
                                "  border: none;"
-                               "  border-radius: 6px;"
+                               "  border-radius: 10px;"
                                "  font-weight: 700;"
                                "  font-size: 13px;"
-                               "  letter-spacing: 0.5px;"
+                               "  letter-spacing: 1px;"
                                "}");
 }
 
@@ -119,22 +119,25 @@ ManualOrderEntryWidget::ManualOrderEntryWidget(QWidget *parent)
                                      "  background-color: #86522b;"
                                      "  color: #ffffff;"
                                      "  border: none;"
-                                     "  border-radius: 8px;"
+                                     "  border-radius: 6px;"
                                      "  font-weight: 700;"
                                      "  font-size: 13px;"
-                                     "  letter-spacing: 0.5px;"
+                                     "  letter-spacing: 1px;"
+                                     "  text-transform: uppercase;"
                                      "}"
-                                     "QPushButton:hover   { background-color: #74461f; }"
-                                     "QPushButton:pressed { background-color: #613a19; }");
+                                     "QPushButton:hover   { background-color: #6a3b16; }"
+                                     "QPushButton:pressed { background-color: #482100; }");
     ui_->resetButton->setStyleSheet("QPushButton {"
                                     "  background-color: transparent;"
-                                    "  color: #9a8a7e;"
-                                    "  border: 1.5px solid #ddd0c6;"
-                                    "  border-radius: 8px;"
+                                    "  color: #84746a;"
+                                    "  border: 1px solid #d6c3b7;"
+                                    "  border-radius: 6px;"
                                     "  font-size: 12px;"
+                                    "  letter-spacing: 0.5px;"
                                     "}"
                                     "QPushButton:hover { color: #86522b; border-color: #c2855a; }");
-    ui_->quantityErrorLabel->setStyleSheet("QLabel { color: #b84a4a; font-size: 11px; }");
+    ui_->quantityErrorLabel->setStyleSheet(
+        "QLabel { color: #a33b3c; font-size: 11px; letter-spacing: 0.3px; }");
 
     successOpacityEffect_ = new QGraphicsOpacityEffect(ui_->successLabel);
     ui_->successLabel->setGraphicsEffect(successOpacityEffect_);
@@ -145,13 +148,18 @@ ManualOrderEntryWidget::ManualOrderEntryWidget(QWidget *parent)
 
     setupConnections();
 
-    setStyleSheet("QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
-                  "QGroupBox { border: 1px solid #e8e2d9; border-radius: 12px; margin-top: 12px; "
-                  "font-weight: 700; }"
-                  "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; }"
+    setStyleSheet("QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 13px; }"
+                  "QGroupBox { border: 1px solid #eee7e3; border-radius: 6px; margin-top: 12px; "
+                  "font-weight: 600; font-size: 11px; letter-spacing: 1px; }"
+                  "QGroupBox::title { subcontrol-origin: margin; left: 16px; padding: 0 4px; "
+                  "background-color: #fff8f5; color: #52443c; }"
                   "QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {"
                   " background-color: #ffffff; color: #1e1b19; border: 1px solid #d6c3b7; "
-                  "border-radius: 8px; padding: 4px 8px; min-height: 34px; }"
+                  "border-radius: 6px; padding: 4px 12px; min-height: 32px; }"
+                  "QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover {"
+                  " border-color: #c2855a; }"
+                  "QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {"
+                  " border-color: #86522b; border-width: 1.5px; }"
                   "QComboBox::drop-down {"
                   " subcontrol-origin: padding;"
                   " subcontrol-position: top right;"
@@ -161,14 +169,15 @@ ManualOrderEntryWidget::ManualOrderEntryWidget(QWidget *parent)
                   "QComboBox QAbstractItemView {"
                   " background-color: #ffffff;"
                   " color: #52443c;"
-                  " border: 1px solid #e8e2d9;"
-                  " selection-background-color: #f5f0ea;"
+                  " border: 1px solid #d6c3b7;"
+                  " border-radius: 2px;"
+                  " selection-background-color: #faf2ee;"
                   " selection-color: #1e1b19;"
                   " outline: 0px;"
                   "}"
                   "QLineEdit[error=\"true\"], QComboBox[error=\"true\"], QSpinBox[error=\"true\"], "
                   "QDoubleSpinBox[error=\"true\"], BuySellToggle[error=\"true\"] {"
-                  " border: 1px solid #b84a4a; }");
+                  " border: 1px solid #a33b3c; background-color: #ffdad6; }");
 }
 
 ManualOrderEntryWidget::~ManualOrderEntryWidget() {
