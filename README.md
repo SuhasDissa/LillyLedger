@@ -32,6 +32,17 @@ flowchart TD
     CSVWriter --> CSV_OUT([Output CSV])
 ```
 
+## Graphical Interface
+
+LillyLedger includes a fully-featured desktop companion application built with Qt6/C++. It provides tools for visualizing order processing metrics and interacting with the central limit order book.
+
+Features include:
+
+- **Dashboard & Analytics:** Import `orders.csv` files and view execution metrics, including processing throughput and order distribution charts.
+- **Order Book Explorer:** Inspect simulated buy and sell depth for specific commodity instruments (Rose, Lavender, Lotus, Tulip, Orchid).
+- **Execution Reports Browser:** View granular trades, rejections, and partial fills with integrated table filtering.
+- **Manual Order Entry:** Inject single custom trades mimicking client behavior directly into the engine.
+
 ## Build Instructions
 
 ```bash
@@ -41,8 +52,11 @@ cmake ..
 
 make
 
-# run it using
+# run CLI engine using
 ./lillyledger
+
+# run GUI application using
+./lillyledger-gui
 
 # delete build files using
 make clean
