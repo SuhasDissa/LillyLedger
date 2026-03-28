@@ -6,16 +6,13 @@
 
 class QComboBox;
 class QDoubleSpinBox;
-class QFormLayout;
 class QGraphicsOpacityEffect;
 class QGroupBox;
-class QHBoxLayout;
 class QLabel;
 class QLineEdit;
 class QPushButton;
 class QSpinBox;
 class QTimer;
-class QVBoxLayout;
 
 class BuySellToggle : public QWidget {
     Q_OBJECT
@@ -37,11 +34,16 @@ class BuySellToggle : public QWidget {
     Side currentSide_{Side::Buy};
 };
 
+namespace Ui {
+class ManualOrderEntryWidget;
+}
+
 class ManualOrderEntryWidget : public QWidget {
     Q_OBJECT
 
   public:
     explicit ManualOrderEntryWidget(QWidget *parent = nullptr);
+    ~ManualOrderEntryWidget();
 
   public slots:
     void prefillPrice(double price, Side side);
@@ -54,7 +56,6 @@ class ManualOrderEntryWidget : public QWidget {
     void onResetClicked();
 
   private:
-    void setupUi();
     void setupConnections();
     void resetForm();
     bool validateForm();
@@ -65,17 +66,7 @@ class ManualOrderEntryWidget : public QWidget {
 
     static Instrument instrumentFromComboIndex(int index);
 
-    QGroupBox *orderGroup_{nullptr};
-    QLineEdit *clientIdEdit_{nullptr};
-    QComboBox *instrumentCombo_{nullptr};
-    BuySellToggle *sideToggle_{nullptr};
-    QWidget *quantityContainer_{nullptr};
-    QSpinBox *quantitySpin_{nullptr};
-    QLabel *quantityErrorLabel_{nullptr};
-    QDoubleSpinBox *priceSpin_{nullptr};
-    QPushButton *submitButton_{nullptr};
-    QPushButton *resetButton_{nullptr};
-    QLabel *successLabel_{nullptr};
+    Ui::ManualOrderEntryWidget *ui_;
     QGraphicsOpacityEffect *successOpacityEffect_{nullptr};
     QTimer *successHoldTimer_{nullptr};
 };

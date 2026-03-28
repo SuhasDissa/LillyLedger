@@ -11,14 +11,16 @@
 #include <cstddef>
 #include <vector>
 
-class QComboBox;
-class QLabel;
 class QPushButton;
 class QStackedWidget;
-class QTableWidget;
+
 class ManualOrderEntryWidget;
 class OrderBookWidget;
 class PerformanceDashboard;
+
+namespace Ui {
+class MainWindow;
+}
 
 Q_DECLARE_METATYPE(Instrument)
 
@@ -27,6 +29,7 @@ class MainWindow : public QMainWindow {
 
   public:
     explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 
   signals:
     void currentInstrumentChanged(Instrument instrument);
@@ -39,10 +42,6 @@ class MainWindow : public QMainWindow {
   private:
     enum class LedState { Idle, Running, Error };
 
-    void setupSidebar();
-    void setupTopBar();
-    void setupBottomBar();
-    void setupCentralArea();
     void applyLightTheme();
     void setLedState(LedState state);
     void refreshUiState();
@@ -59,42 +58,8 @@ class MainWindow : public QMainWindow {
     static QString compactTransactTime(const char *text);
     static QString fixedCharToQString(const char *text, std::size_t maxLen);
 
-    QStackedWidget *stackedWidget_{nullptr};
-    OrderBookWidget *orderBookWidget_{nullptr};
-    QTableWidget *executionReportsTable_{nullptr};
-    ManualOrderEntryWidget *manualEntryWidget_{nullptr};
-    PerformanceDashboard *performanceDashboard_{nullptr};
-
-    QWidget *sidebarWidget_{nullptr};
-    QWidget *topBarWidget_{nullptr};
-    QWidget *bottomBarWidget_{nullptr};
-    QPushButton *sidebarInstrumentsButton_{nullptr};
-    QPushButton *sidebarAnalyticsButton_{nullptr};
-    QPushButton *sidebarManualButton_{nullptr};
-    QPushButton *sidebarPerformanceButton_{nullptr};
-    QPushButton *sidebarSupportButton_{nullptr};
-    QComboBox *orderBookInstrumentCombo_{nullptr};
-    QComboBox *instrumentFilter_{nullptr};
-    QComboBox *statusFilter_{nullptr};
-    QComboBox *sideFilter_{nullptr};
-
-    QPushButton *openCsvButton_{nullptr};
-    QPushButton *runEngineButton_{nullptr};
-    QPushButton *exportCsvButton_{nullptr};
+    Ui::MainWindow *ui_;
     std::vector<QPushButton *> topTabButtons_;
-
-    QLabel *reportsSubtitleLabel_{nullptr};
-    QLabel *showingResultsLabel_{nullptr};
-    QLabel *summaryTotalValue_{nullptr};
-    QLabel *summaryFilledValue_{nullptr};
-    QLabel *summaryPartialValue_{nullptr};
-    QLabel *summaryRejectedValue_{nullptr};
-    QLabel *summaryNewValue_{nullptr};
-
-    QLabel *ordersProcessedValue_{nullptr};
-    QLabel *reportsGeneratedValue_{nullptr};
-    QLabel *lastRunDurationValue_{nullptr};
-    QLabel *engineStateValue_{nullptr};
 
     QString inputFilePath_;
     std::vector<ExecutionReport> executionReports_;

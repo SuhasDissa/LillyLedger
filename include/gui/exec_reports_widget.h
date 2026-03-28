@@ -4,21 +4,20 @@
 #include <QWidget>
 #include <vector>
 
-class QLabel;
-class QComboBox;
-class QLineEdit;
-class QPushButton;
-class QTableView;
 class QModelIndex;
-
 class ExecutionReportsModel;
 class ExecutionReportsFilterProxyModel;
+
+namespace Ui {
+class ExecutionReportsWidget;
+}
 
 class ExecutionReportsWidget : public QWidget {
     Q_OBJECT
 
   public:
     explicit ExecutionReportsWidget(QWidget *parent = nullptr);
+    ~ExecutionReportsWidget();
 
   public slots:
     void setReports(const std::vector<ExecutionReport> &reports);
@@ -34,26 +33,10 @@ class ExecutionReportsWidget : public QWidget {
     void handleFilterChanged();
 
   private:
-    void setupUi();
     void updateShowingLabel();
     void updateSummaryBar();
 
-    QComboBox *instrumentFilter_{nullptr};
-    QComboBox *statusFilter_{nullptr};
-    QComboBox *sideFilter_{nullptr};
-    QLineEdit *searchEdit_{nullptr};
-    QPushButton *clearFiltersButton_{nullptr};
-    QPushButton *exportButton_{nullptr};
-    QLabel *showingLabel_{nullptr};
-
-    QTableView *tableView_{nullptr};
-
-    QLabel *totalReportsLabel_{nullptr};
-    QLabel *filledLabel_{nullptr};
-    QLabel *partialFilledLabel_{nullptr};
-    QLabel *rejectedLabel_{nullptr};
-    QLabel *newRestingLabel_{nullptr};
-
+    Ui::ExecutionReportsWidget *ui_;
     ExecutionReportsModel *model_{nullptr};
     ExecutionReportsFilterProxyModel *proxyModel_{nullptr};
 };

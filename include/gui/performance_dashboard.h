@@ -15,14 +15,9 @@ struct PerfStats {
     int reportCount{0};
 };
 
-class QLabel;
-class QFrame;
-class QTableWidget;
-class QStackedLayout;
-class QGridLayout;
-class QChartView;
 class QLineSeries;
 class QValueAxis;
+class QChartView;
 
 class PhaseBreakdownBar : public QWidget {
     Q_OBJECT
@@ -38,11 +33,16 @@ class PhaseBreakdownBar : public QWidget {
     PerfStats stats_;
 };
 
+namespace Ui {
+class PerformanceDashboard;
+}
+
 class PerformanceDashboard : public QWidget {
     Q_OBJECT
 
   public:
     explicit PerformanceDashboard(QWidget *parent = nullptr);
+    ~PerformanceDashboard();
 
   public slots:
     void updateStats(const PerfStats &stats);
@@ -56,8 +56,6 @@ class PerformanceDashboard : public QWidget {
         PerfStats stats{};
     };
 
-    void setupUi();
-    QFrame *buildKpiCard(const QString &title, QLabel **valueLabel, const QString &subtitle);
     void setHasRunData(bool hasRunData);
     void updateKpis(const PerfStats &stats);
     void updatePhaseLegend(const PerfStats &stats);
@@ -66,26 +64,10 @@ class PerformanceDashboard : public QWidget {
 
     static QString formatMicrosecondsAsMs(int64_t us, int precision = 2);
 
-    QStackedLayout *stackedLayout_{nullptr};
-    QWidget *placeholderWidget_{nullptr};
-    QWidget *contentWidget_{nullptr};
-
-    QLabel *ordersValueLabel_{nullptr};
-    QLabel *reportsValueLabel_{nullptr};
-    QLabel *throughputValueLabel_{nullptr};
-    QLabel *totalTimeValueLabel_{nullptr};
-
-    PhaseBreakdownBar *phaseBar_{nullptr};
-    QLabel *parseLegendValueLabel_{nullptr};
-    QLabel *matchLegendValueLabel_{nullptr};
-    QLabel *writeLegendValueLabel_{nullptr};
-
-    QChartView *chartView_{nullptr};
+    Ui::PerformanceDashboard *ui_;
     QLineSeries *historySeries_{nullptr};
     QValueAxis *axisX_{nullptr};
     QValueAxis *axisY_{nullptr};
-
-    QTableWidget *instrumentTable_{nullptr};
 
     std::deque<RunSample> runHistory_;
     int runCounter_{0};

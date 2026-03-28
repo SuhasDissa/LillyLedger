@@ -1,16 +1,15 @@
 #include "orderbook_widget.h"
+#include "ui_orderbook_widget.h"
 
 #include <QAbstractItemView>
 #include <QBrush>
 #include <QColor>
 #include <QFont>
 #include <QHeaderView>
-#include <QLabel>
 #include <QLocale>
 #include <QPropertyAnimation>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QVBoxLayout>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -70,27 +69,10 @@ QString tableStyle() {
 }
 } // namespace
 
-OrderBookWidget::OrderBookWidget(QWidget *parent) : QWidget(parent) { setupUi(); }
-
-void OrderBookWidget::updateBook(const std::vector<BookEntry> &buys,
-                                 const std::vector<BookEntry> &sells, Instrument instrument) {
-    instrumentHeaderLabel_->setText(QString("Orderbook : %1").arg(instrumentLabelText(instrument)));
-
-    const std::vector<BookRow> bidRows = buildBookRows(buys);
-    const std::vector<BookRow> askRows = buildBookRows(sells);
-
-    updateSpreadLabel(bidRows, askRows);
-    renderBookTable(bidRows, askRows);
-}
-
-void OrderBookWidget::setupUi() {
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(12, 12, 12, 12);
-    mainLayout->setSpacing(8);
-
-    instrumentHeaderLabel_ = new QLabel("Orderbook : 🌹 Rose", this);
-    instrumentHeaderLabel_->setObjectName("OrderBookTitle");
-    instrumentHeaderLabel_->setStyleSheet(
+OrderBookWidget::OrderBookWidget(QWidget *parent) : QWidget(parent), ui_(new Ui::OrderBookWidget) {
+    ui_->setupUi(this);
+    ui_->instrumentHeaderLabel->setObjectName("OrderBookTitle");
+    ui_->instrumentHeaderLabel->setStyleSheet(
         "QLabel#OrderBookTitle {"
         "  color: #1e1b19;"
         "  font-family: 'Georgia', 'Palatino Linotype', serif;"
@@ -99,31 +81,18 @@ void OrderBookWidget::setupUi() {
         "  font-style: italic;"
         "  letter-spacing: 0.5px;"
         "}");
-    mainLayout->addWidget(instrumentHeaderLabel_);
-
-    spreadLabel_ = new QLabel("Spread: N/A", this);
-    spreadLabel_->setStyleSheet(
-        "QLabel {"
-        "  color: #86522b;"
-        "  font-weight: 600;"
-        "  font-size: 12px;"
-        "  font-family: 'Courier New', 'Consolas', monospace;"
-        "  background-color: #fdf4ee;"
-        "  border: 1px solid #ddc4ae;"
-        "  border-radius: 6px;"
-        "  padding: 3px 12px;"
-        "}");
-    mainLayout->addWidget(spreadLabel_);
-
-    bookTable_ = new QTableWidget(this);
-    bookTable_->setColumnCount(10);
-    bookTable_->setHorizontalHeaderLabels(
-        {"Pr.Seq", "Order ID", "Trader ID", "Qty", "Price", "Price", "Qty", "Trader ID",
-         "Order ID", "Pr.Seq"});
-    setupBookTable(bookTable_);
-    mainLayout->addWidget(bookTable_, 1);
-
-    connect(bookTable_, &QTableWidget::cellClicked, this, [this](int row, int column) {
+    ui_->spreadLabel->setStyleSheet("QLabel {"
+                                    "  color: #86522b;"
+                                    "  font-weight: 600;"
+                                    "  font-size: 12px;"
+                                    "  font-family: 'Courier New', 'Consolas', monospace;"
+                                    "  background-color: #fdf4ee;"
+                                    "  border: 1px solid #ddc4ae;"
+                                    "  border-radius: 6px;"
+                                    "  padding: 3px 12px;"
+                                    "}");
+    setupBookTable(ui_->bookTable);
+    connect(ui_->bookTable, &QTableWidget::cellClicked, this, [this](int row, int column) {
         int priceColumn = -1;
         Side side = Side::Buy;
         if (column <= kBuyPriceColumn) {
@@ -133,44 +102,55 @@ void OrderBookWidget::setupUi() {
             priceColumn = kSellPriceColumn;
             side = Side::Sell;
         }
-
-        QTableWidgetItem *priceItem = bookTable_->item(row, priceColumn);
+        QTableWidgetItem *priceItem = ui_->bookTable->item(row, priceColumn);
         if (priceItem == nullptr) {
             return;
         }
-
         bool ok = false;
         const double price = priceItem->data(Qt::UserRole).toDouble(&ok);
         if (!ok || price <= 0.0) {
             return;
         }
-
         emit priceClicked(price, side);
     });
+    setStyleSheet("OrderBookWidget { background-color: #faf8f4; }"
+                  "QTableWidget {"
+                  "  background-color: #ffffff;"
+                  "  border: 1px solid #ead8ce;"
+                  "  border-radius: 8px;"
+                  "  gridline-color: #f0e8e2;"
+                  "  color: #1e1b19;"
+                  "  font-family: 'Courier New', 'Consolas', monospace;"
+                  "  font-size: 12px;"
+                  "}"
+                  "QHeaderView::section {"
+                  "  background-color: #f5ede7;"
+                  "  color: #7a6a5e;"
+                  "  border: none;"
+                  "  border-bottom: 1.5px solid #ead8ce;"
+                  "  border-right: 1px solid #ead8ce;"
+                  "  padding: 8px 8px;"
+                  "  font-weight: 700;"
+                  "  font-size: 10px;"
+                  "  font-family: 'DM Sans', 'Segoe UI', sans-serif;"
+                  "  letter-spacing: 0.5px;"
+                  "}");
+}
 
-    setStyleSheet(
-        "OrderBookWidget { background-color: #faf8f4; }"
-        "QTableWidget {"
-        "  background-color: #ffffff;"
-        "  border: 1px solid #ead8ce;"
-        "  border-radius: 8px;"
-        "  gridline-color: #f0e8e2;"
-        "  color: #1e1b19;"
-        "  font-family: 'Courier New', 'Consolas', monospace;"
-        "  font-size: 12px;"
-        "}"
-        "QHeaderView::section {"
-        "  background-color: #f5ede7;"
-        "  color: #7a6a5e;"
-        "  border: none;"
-        "  border-bottom: 1.5px solid #ead8ce;"
-        "  border-right: 1px solid #ead8ce;"
-        "  padding: 8px 8px;"
-        "  font-weight: 700;"
-        "  font-size: 10px;"
-        "  font-family: 'DM Sans', 'Segoe UI', sans-serif;"
-        "  letter-spacing: 0.5px;"
-        "}");
+OrderBookWidget::~OrderBookWidget() {
+    delete ui_;
+}
+
+void OrderBookWidget::updateBook(const std::vector<BookEntry> &buys,
+                                 const std::vector<BookEntry> &sells, Instrument instrument) {
+    ui_->instrumentHeaderLabel->setText(
+        QString("Orderbook : %1").arg(instrumentLabelText(instrument)));
+
+    const std::vector<BookRow> bidRows = buildBookRows(buys);
+    const std::vector<BookRow> askRows = buildBookRows(sells);
+
+    updateSpreadLabel(bidRows, askRows);
+    renderBookTable(bidRows, askRows);
 }
 
 void OrderBookWidget::setupBookTable(QTableWidget *table) {
@@ -236,7 +216,8 @@ OrderBookWidget::buildBookRows(const std::vector<BookEntry> &entries) {
         BookRow row;
         row.prioritySeq = static_cast<int>(entry.seqNum) + 1;
         row.orderId = fixedCharToQString(entry.orderId, sizeof(entry.orderId));
-        row.traderId = fixedCharToQString(entry.order.clientOrderId, sizeof(entry.order.clientOrderId));
+        row.traderId =
+            fixedCharToQString(entry.order.clientOrderId, sizeof(entry.order.clientOrderId));
         row.quantity = entry.remainingQty;
         row.price = entry.order.price;
         rows.push_back(row);
@@ -247,10 +228,9 @@ OrderBookWidget::buildBookRows(const std::vector<BookEntry> &entries) {
 
 void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
                                       const std::vector<BookRow> &askRows) {
-    const int rowCount =
-        std::max(kDefaultVisibleRows,
-                 std::max(static_cast<int>(bidRows.size()), static_cast<int>(askRows.size())));
-    bookTable_->setRowCount(rowCount);
+    const int rowCount = std::max(kDefaultVisibleRows, std::max(static_cast<int>(bidRows.size()),
+                                                                static_cast<int>(askRows.size())));
+    ui_->bookTable->setRowCount(rowCount);
 
     // Warm editorial palette — green tints for bids, rose tints for asks
     const QColor buyNear("#e8f4ee");   // lightest green (best bid — closest to spread)
@@ -282,7 +262,8 @@ void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
                 bidRows.size() <= 1 ? 0.0 : static_cast<double>(row) / (bidRows.size() - 1);
             const QColor rowBg = interpolateColor(buyNear, buyFar, t);
 
-            auto *seqItem = makeCell(QString::number(bookRow.prioritySeq), rowBg, buyText, Qt::AlignCenter);
+            auto *seqItem =
+                makeCell(QString::number(bookRow.prioritySeq), rowBg, buyText, Qt::AlignCenter);
             auto *orderIdItem = makeCell(bookRow.orderId, rowBg, buyText, Qt::AlignCenter);
             auto *traderIdItem = makeCell(bookRow.traderId, rowBg, buyText, Qt::AlignCenter);
             auto *qtyItem = makeCell(formatNumber(bookRow.quantity), rowBg, buyText,
@@ -291,27 +272,29 @@ void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
                                        Qt::AlignRight | Qt::AlignVCenter);
             priceItem->setData(Qt::UserRole, bookRow.price);
 
-            bookTable_->setItem(row, kBuyPrSeqColumn, seqItem);
-            bookTable_->setItem(row, kBuyOrderIdColumn, orderIdItem);
-            bookTable_->setItem(row, kBuyTraderIdColumn, traderIdItem);
-            bookTable_->setItem(row, kBuyQtyColumn, qtyItem);
-            bookTable_->setItem(row, kBuyPriceColumn, priceItem);
+            ui_->bookTable->setItem(row, kBuyPrSeqColumn, seqItem);
+            ui_->bookTable->setItem(row, kBuyOrderIdColumn, orderIdItem);
+            ui_->bookTable->setItem(row, kBuyTraderIdColumn, traderIdItem);
+            ui_->bookTable->setItem(row, kBuyQtyColumn, qtyItem);
+            ui_->bookTable->setItem(row, kBuyPriceColumn, priceItem);
 
             const auto prev = previousBidQtyByOrderId_.find(bookRow.orderId);
             if (prev != previousBidQtyByOrderId_.end() && prev->second != bookRow.quantity) {
-                animateCellsFlash(bookTable_, row, kBuyPrSeqColumn, kBuyPriceColumn, rowBg);
+                animateCellsFlash(ui_->bookTable, row, kBuyPrSeqColumn, kBuyPriceColumn, rowBg);
             }
         } else {
-            bookTable_->setItem(row, kBuyPrSeqColumn,
-                                makeCell("", buyBlank, buyText, Qt::AlignCenter));
-            bookTable_->setItem(row, kBuyOrderIdColumn,
-                                makeCell("", buyBlank, buyText, Qt::AlignCenter));
-            bookTable_->setItem(row, kBuyTraderIdColumn,
-                                makeCell("", buyBlank, buyText, Qt::AlignCenter));
-            bookTable_->setItem(row, kBuyQtyColumn,
-                                makeCell("", buyBlank, buyText, Qt::AlignRight | Qt::AlignVCenter));
-            bookTable_->setItem(row, kBuyPriceColumn,
-                                makeCell("", buyBlank, buyText, Qt::AlignRight | Qt::AlignVCenter));
+            ui_->bookTable->setItem(row, kBuyPrSeqColumn,
+                                    makeCell("", buyBlank, buyText, Qt::AlignCenter));
+            ui_->bookTable->setItem(row, kBuyOrderIdColumn,
+                                    makeCell("", buyBlank, buyText, Qt::AlignCenter));
+            ui_->bookTable->setItem(row, kBuyTraderIdColumn,
+                                    makeCell("", buyBlank, buyText, Qt::AlignCenter));
+            ui_->bookTable->setItem(
+                row, kBuyQtyColumn,
+                makeCell("", buyBlank, buyText, Qt::AlignRight | Qt::AlignVCenter));
+            ui_->bookTable->setItem(
+                row, kBuyPriceColumn,
+                makeCell("", buyBlank, buyText, Qt::AlignRight | Qt::AlignVCenter));
         }
 
         if (row < static_cast<int>(askRows.size())) {
@@ -328,29 +311,32 @@ void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
                                      Qt::AlignRight | Qt::AlignVCenter);
             auto *traderIdItem = makeCell(bookRow.traderId, rowBg, sellText, Qt::AlignCenter);
             auto *orderIdItem = makeCell(bookRow.orderId, rowBg, sellText, Qt::AlignCenter);
-            auto *seqItem = makeCell(QString::number(bookRow.prioritySeq), rowBg, sellText, Qt::AlignCenter);
+            auto *seqItem =
+                makeCell(QString::number(bookRow.prioritySeq), rowBg, sellText, Qt::AlignCenter);
 
-            bookTable_->setItem(row, kSellPriceColumn, priceItem);
-            bookTable_->setItem(row, kSellQtyColumn, qtyItem);
-            bookTable_->setItem(row, kSellTraderIdColumn, traderIdItem);
-            bookTable_->setItem(row, kSellOrderIdColumn, orderIdItem);
-            bookTable_->setItem(row, kSellPrSeqColumn, seqItem);
+            ui_->bookTable->setItem(row, kSellPriceColumn, priceItem);
+            ui_->bookTable->setItem(row, kSellQtyColumn, qtyItem);
+            ui_->bookTable->setItem(row, kSellTraderIdColumn, traderIdItem);
+            ui_->bookTable->setItem(row, kSellOrderIdColumn, orderIdItem);
+            ui_->bookTable->setItem(row, kSellPrSeqColumn, seqItem);
 
             const auto prev = previousAskQtyByOrderId_.find(bookRow.orderId);
             if (prev != previousAskQtyByOrderId_.end() && prev->second != bookRow.quantity) {
-                animateCellsFlash(bookTable_, row, kSellPriceColumn, kSellPrSeqColumn, rowBg);
+                animateCellsFlash(ui_->bookTable, row, kSellPriceColumn, kSellPrSeqColumn, rowBg);
             }
         } else {
-            bookTable_->setItem(row, kSellPriceColumn,
-                                makeCell("", sellBlank, sellText, Qt::AlignRight | Qt::AlignVCenter));
-            bookTable_->setItem(row, kSellQtyColumn,
-                                makeCell("", sellBlank, sellText, Qt::AlignRight | Qt::AlignVCenter));
-            bookTable_->setItem(row, kSellTraderIdColumn,
-                                makeCell("", sellBlank, sellText, Qt::AlignCenter));
-            bookTable_->setItem(row, kSellOrderIdColumn,
-                                makeCell("", sellBlank, sellText, Qt::AlignCenter));
-            bookTable_->setItem(row, kSellPrSeqColumn,
-                                makeCell("", sellBlank, sellText, Qt::AlignCenter));
+            ui_->bookTable->setItem(
+                row, kSellPriceColumn,
+                makeCell("", sellBlank, sellText, Qt::AlignRight | Qt::AlignVCenter));
+            ui_->bookTable->setItem(
+                row, kSellQtyColumn,
+                makeCell("", sellBlank, sellText, Qt::AlignRight | Qt::AlignVCenter));
+            ui_->bookTable->setItem(row, kSellTraderIdColumn,
+                                    makeCell("", sellBlank, sellText, Qt::AlignCenter));
+            ui_->bookTable->setItem(row, kSellOrderIdColumn,
+                                    makeCell("", sellBlank, sellText, Qt::AlignCenter));
+            ui_->bookTable->setItem(row, kSellPrSeqColumn,
+                                    makeCell("", sellBlank, sellText, Qt::AlignCenter));
         }
     }
 
@@ -361,12 +347,12 @@ void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
 void OrderBookWidget::updateSpreadLabel(const std::vector<BookRow> &bidRows,
                                         const std::vector<BookRow> &askRows) {
     if (bidRows.empty() || askRows.empty()) {
-        spreadLabel_->setText("Spread: N/A");
+        ui_->spreadLabel->setText("Spread: N/A");
         return;
     }
 
     const double spread = askRows.front().price - bidRows.front().price;
-    spreadLabel_->setText(QString("Spread: $%1").arg(spread, 0, 'f', 2));
+    ui_->spreadLabel->setText(QString("Spread: $%1").arg(spread, 0, 'f', 2));
 }
 
 void OrderBookWidget::animateCellsFlash(QTableWidget *table, int row, int firstColumn,
@@ -385,7 +371,9 @@ void OrderBookWidget::animateCellsFlash(QTableWidget *table, int row, int firstC
     }
 }
 
-QString OrderBookWidget::formatPrice(double price) { return QString::number(price, 'f', 2); }
+QString OrderBookWidget::formatPrice(double price) {
+    return QString::number(price, 'f', 2);
+}
 
 QString OrderBookWidget::formatNumber(uint64_t value) {
     return QLocale().toString(static_cast<qlonglong>(value));

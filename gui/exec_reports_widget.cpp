@@ -1,4 +1,5 @@
 #include "exec_reports_widget.h"
+#include "ui_exec_reports_widget.h"
 
 #include "core/enum/instrument.h"
 #include "core/enum/side.h"
@@ -10,7 +11,6 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QHeaderView>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
@@ -20,7 +20,6 @@
 #include <QStyledItemDelegate>
 #include <QTableView>
 #include <QTextStream>
-#include <QVBoxLayout>
 #include <QtGlobal>
 #include <algorithm>
 #include <array>
@@ -201,8 +200,8 @@ class ExecutionReportsModel : public QAbstractTableModel {
         }
 
         static const std::array<const char *, kColumnCount> kHeaders = {
-            "Order ID", "Client Order ID", "Instrument", "Side",
-            "Exec Status", "Quantity", "Price"};
+            "Order ID",    "Client Order ID", "Instrument", "Side",
+            "Exec Status", "Quantity",        "Price"};
 
         if (section < 0 || section >= kColumnCount) {
             return {};
@@ -449,7 +448,126 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
     QString clientOrderSearch_;
 };
 
-ExecutionReportsWidget::ExecutionReportsWidget(QWidget *parent) : QWidget(parent) { setupUi(); }
+ExecutionReportsWidget::ExecutionReportsWidget(QWidget *parent)
+    : QWidget(parent), ui_(new Ui::ExecutionReportsWidget) {
+    ui_->setupUi(this);
+    model_ = new ExecutionReportsModel(this);
+    proxyModel_ = new ExecutionReportsFilterProxyModel(this);
+    proxyModel_->setSourceModel(model_);
+
+    ui_->tableView->setModel(proxyModel_);
+    ui_->tableView->setItemDelegateForColumn(kSideColumn, new SideBadgeDelegate(ui_->tableView));
+    ui_->tableView->setSortingEnabled(true);
+    ui_->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui_->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui_->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui_->tableView->setWordWrap(false);
+    ui_->tableView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui_->tableView->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
+    ui_->tableView->verticalHeader()->setMinimumSectionSize(kTableRowHeight);
+    ui_->tableView->verticalHeader()->setVisible(false);
+    auto *header = ui_->tableView->horizontalHeader();
+    header->setMinimumSectionSize(56);
+    header->setSectionResizeMode(kOrderIdColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kClientIdColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kInstrumentColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kSideColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kStatusColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(kPriceColumn, QHeaderView::Stretch);
+    ui_->tableView->setAlternatingRowColors(false);
+    ui_->tableView->setStyleSheet("QTableView {"
+                                  " background-color: #ffffff;"
+                                  " color: #1e1b19;"
+                                  " gridline-color: #f0ebe5;"
+                                  " border: 1px solid #e8e2d9;"
+                                  "}"
+                                  "QHeaderView::section {"
+                                  " background-color: #f5f0ea;"
+                                  " color: #84746a;"
+                                  " border: 1px solid #e8e2d9;"
+                                  " padding: 8px 10px;"
+                                  "}");
+
+    ui_->instrumentFilter->addItem("All Instruments", kAnyFilterValue);
+    ui_->instrumentFilter->addItem("🌹 Rose", static_cast<int>(Instrument::Rose));
+    ui_->instrumentFilter->addItem("💜 Lavender", static_cast<int>(Instrument::Lavender));
+    ui_->instrumentFilter->addItem("🪷 Lotus", static_cast<int>(Instrument::Lotus));
+    ui_->instrumentFilter->addItem("🌷 Tulip", static_cast<int>(Instrument::Tulip));
+    ui_->instrumentFilter->addItem("🌸 Orchid", static_cast<int>(Instrument::Orchid));
+
+    ui_->statusFilter->addItem("All Statuses", kAnyFilterValue);
+    ui_->statusFilter->addItem("New", static_cast<int>(Status::New));
+    ui_->statusFilter->addItem("Rejected", static_cast<int>(Status::Rejected));
+    ui_->statusFilter->addItem("Fill", static_cast<int>(Status::Fill));
+    ui_->statusFilter->addItem("PFill", static_cast<int>(Status::PFill));
+
+    ui_->sideFilter->addItem("All Sides", kAnyFilterValue);
+    ui_->sideFilter->addItem("Buy", static_cast<int>(Side::Buy));
+    ui_->sideFilter->addItem("Sell", static_cast<int>(Side::Sell));
+
+    ui_->filledLabel->setStyleSheet("QLabel { color: #2d6b4a; }");
+    ui_->partialFilledLabel->setStyleSheet("QLabel { color: #c2855a; }");
+    ui_->rejectedLabel->setStyleSheet("QLabel { color: #b84a4a; }");
+    ui_->newRestingLabel->setStyleSheet("QLabel { color: #5b8fcf; }");
+
+    connect(ui_->instrumentFilter, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this](int) {
+                proxyModel_->setInstrumentFilter(ui_->instrumentFilter->currentData().toInt());
+                handleFilterChanged();
+            });
+    connect(ui_->statusFilter, qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int) {
+        proxyModel_->setStatusFilter(ui_->statusFilter->currentData().toInt());
+        handleFilterChanged();
+    });
+    connect(ui_->sideFilter, qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int) {
+        proxyModel_->setSideFilter(ui_->sideFilter->currentData().toInt());
+        handleFilterChanged();
+    });
+    connect(ui_->searchEdit, &QLineEdit::textChanged, this, [this](const QString &text) {
+        proxyModel_->setClientOrderIdSearch(text);
+        handleFilterChanged();
+    });
+    connect(ui_->clearFiltersButton, &QPushButton::clicked, this,
+            &ExecutionReportsWidget::clearFilters);
+    connect(ui_->exportButton, &QPushButton::clicked, this, &ExecutionReportsWidget::exportCsv);
+    connect(ui_->tableView, &QTableView::doubleClicked, this,
+            &ExecutionReportsWidget::handleTableDoubleClick);
+
+    setStyleSheet("QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
+                  "QComboBox, QLineEdit {"
+                  " background-color: #ffffff;"
+                  " border: 1px solid #e8e2d9;"
+                  " border-radius: 10px;"
+                  " padding: 4px 8px;"
+                  " min-height: 34px;"
+                  " color: #52443c;"
+                  "}"
+                  "QComboBox::drop-down {"
+                  " subcontrol-origin: padding;"
+                  " subcontrol-position: top right;"
+                  " width: 18px;"
+                  " border-left: 1px solid #e8e2d9;"
+                  "}"
+                  "QComboBox QAbstractItemView {"
+                  " background-color: #ffffff;"
+                  " color: #52443c;"
+                  " border: 1px solid #e8e2d9;"
+                  " selection-background-color: #f5f0ea;"
+                  " selection-color: #1e1b19;"
+                  " outline: 0px;"
+                  "}"
+                  "QPushButton {"
+                  " background-color: #ffffff;"
+                  " border: 1px solid #d6c3b7;"
+                  " border-radius: 8px;"
+                  " color: #52443c;"
+                  " padding: 5px 10px;"
+                  " min-height: 34px;"
+                  "}"
+                  "QPushButton:hover { background-color: #fdf8f4; }"
+                  "QLabel { color: #52443c; }");
+}
 
 void ExecutionReportsWidget::setReports(const std::vector<ExecutionReport> &reports) {
     model_->setReports(reports);
@@ -464,10 +582,10 @@ void ExecutionReportsWidget::appendReport(const ExecutionReport &report) {
 }
 
 void ExecutionReportsWidget::clearFilters() {
-    instrumentFilter_->setCurrentIndex(0);
-    statusFilter_->setCurrentIndex(0);
-    sideFilter_->setCurrentIndex(0);
-    searchEdit_->clear();
+    ui_->instrumentFilter->setCurrentIndex(0);
+    ui_->statusFilter->setCurrentIndex(0);
+    ui_->sideFilter->setCurrentIndex(0);
+    ui_->searchEdit->clear();
 }
 
 void ExecutionReportsWidget::exportCsv() {
@@ -510,198 +628,24 @@ void ExecutionReportsWidget::handleTableDoubleClick(const QModelIndex &proxyInde
     emit reportSelected(*report);
 }
 
-void ExecutionReportsWidget::handleFilterChanged() { updateShowingLabel(); }
+ExecutionReportsWidget::~ExecutionReportsWidget() {
+    delete ui_;
+}
 
-void ExecutionReportsWidget::setupUi() {
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(8);
-
-    model_ = new ExecutionReportsModel(this);
-    proxyModel_ = new ExecutionReportsFilterProxyModel(this);
-    proxyModel_->setSourceModel(model_);
-
-    auto *filterRow = new QHBoxLayout();
-    filterRow->setSpacing(8);
-
-    instrumentFilter_ = new QComboBox(this);
-    instrumentFilter_->addItem("All Instruments", kAnyFilterValue);
-    instrumentFilter_->addItem("🌹 Rose", static_cast<int>(Instrument::Rose));
-    instrumentFilter_->addItem("💜 Lavender", static_cast<int>(Instrument::Lavender));
-    instrumentFilter_->addItem("🪷 Lotus", static_cast<int>(Instrument::Lotus));
-    instrumentFilter_->addItem("🌷 Tulip", static_cast<int>(Instrument::Tulip));
-    instrumentFilter_->addItem("🌸 Orchid", static_cast<int>(Instrument::Orchid));
-
-    statusFilter_ = new QComboBox(this);
-    statusFilter_->addItem("All Statuses", kAnyFilterValue);
-    statusFilter_->addItem("New", static_cast<int>(Status::New));
-    statusFilter_->addItem("Rejected", static_cast<int>(Status::Rejected));
-    statusFilter_->addItem("Fill", static_cast<int>(Status::Fill));
-    statusFilter_->addItem("PFill", static_cast<int>(Status::PFill));
-
-    sideFilter_ = new QComboBox(this);
-    sideFilter_->addItem("All Sides", kAnyFilterValue);
-    sideFilter_->addItem("Buy", static_cast<int>(Side::Buy));
-    sideFilter_->addItem("Sell", static_cast<int>(Side::Sell));
-
-    searchEdit_ = new QLineEdit(this);
-    searchEdit_->setPlaceholderText("Search order ID…");
-
-    instrumentFilter_->setMinimumWidth(170);
-    statusFilter_->setMinimumWidth(150);
-    sideFilter_->setMinimumWidth(120);
-    searchEdit_->setMinimumWidth(200);
-    instrumentFilter_->setMinimumHeight(kControlHeight);
-    statusFilter_->setMinimumHeight(kControlHeight);
-    sideFilter_->setMinimumHeight(kControlHeight);
-    searchEdit_->setMinimumHeight(kControlHeight);
-
-    clearFiltersButton_ = new QPushButton("Clear Filters", this);
-    exportButton_ = new QPushButton("Export CSV", this);
-    showingLabel_ = new QLabel("Showing 0 / 0 reports", this);
-    showingLabel_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    showingLabel_->setMinimumWidth(190);
-    clearFiltersButton_->setMinimumHeight(kControlHeight);
-    exportButton_->setMinimumHeight(kControlHeight);
-
-    filterRow->addWidget(instrumentFilter_);
-    filterRow->addWidget(statusFilter_);
-    filterRow->addWidget(sideFilter_);
-    filterRow->addWidget(searchEdit_, 1);
-    filterRow->addWidget(clearFiltersButton_);
-    filterRow->addStretch();
-    filterRow->addWidget(exportButton_);
-    filterRow->addWidget(showingLabel_);
-    mainLayout->addLayout(filterRow);
-
-    tableView_ = new QTableView(this);
-    tableView_->setModel(proxyModel_);
-    tableView_->setItemDelegateForColumn(kSideColumn, new SideBadgeDelegate(tableView_));
-    tableView_->setSortingEnabled(true);
-    tableView_->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tableView_->setSelectionMode(QAbstractItemView::SingleSelection);
-    tableView_->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tableView_->setWordWrap(false);
-    tableView_->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-    tableView_->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
-    tableView_->verticalHeader()->setMinimumSectionSize(kTableRowHeight);
-    tableView_->verticalHeader()->setVisible(false);
-    auto *header = tableView_->horizontalHeader();
-    header->setMinimumSectionSize(56);
-    header->setSectionResizeMode(kOrderIdColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kClientIdColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kInstrumentColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kSideColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kStatusColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kQtyColumn, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(kPriceColumn, QHeaderView::Stretch);
-    tableView_->setAlternatingRowColors(false);
-    tableView_->setStyleSheet(
-        "QTableView {"
-        " background-color: #ffffff;"
-        " color: #1e1b19;"
-        " gridline-color: #f0ebe5;"
-        " border: 1px solid #e8e2d9;"
-        "}"
-        "QHeaderView::section {"
-        " background-color: #f5f0ea;"
-        " color: #84746a;"
-        " border: 1px solid #e8e2d9;"
-        " padding: 8px 10px;"
-        "}");
-    mainLayout->addWidget(tableView_, 1);
-
-    auto *summaryRow = new QHBoxLayout();
-    summaryRow->setSpacing(16);
-
-    totalReportsLabel_ = new QLabel("Total reports: 0", this);
-    filledLabel_ = new QLabel("Filled: 0", this);
-    filledLabel_->setStyleSheet("QLabel { color: #2d6b4a; }");
-    partialFilledLabel_ = new QLabel("Partially filled: 0", this);
-    partialFilledLabel_->setStyleSheet("QLabel { color: #c2855a; }");
-    rejectedLabel_ = new QLabel("Rejected: 0", this);
-    rejectedLabel_->setStyleSheet("QLabel { color: #b84a4a; }");
-    newRestingLabel_ = new QLabel("New/resting: 0", this);
-    newRestingLabel_->setStyleSheet("QLabel { color: #5b8fcf; }");
-
-    summaryRow->addWidget(totalReportsLabel_);
-    summaryRow->addWidget(filledLabel_);
-    summaryRow->addWidget(partialFilledLabel_);
-    summaryRow->addWidget(rejectedLabel_);
-    summaryRow->addWidget(newRestingLabel_);
-    summaryRow->addStretch();
-    mainLayout->addLayout(summaryRow);
-
-    connect(instrumentFilter_, qOverload<int>(&QComboBox::currentIndexChanged), this,
-            [this](int) {
-                proxyModel_->setInstrumentFilter(instrumentFilter_->currentData().toInt());
-                handleFilterChanged();
-            });
-    connect(statusFilter_, qOverload<int>(&QComboBox::currentIndexChanged), this,
-            [this](int) {
-                proxyModel_->setStatusFilter(statusFilter_->currentData().toInt());
-                handleFilterChanged();
-            });
-    connect(sideFilter_, qOverload<int>(&QComboBox::currentIndexChanged), this,
-            [this](int) {
-                proxyModel_->setSideFilter(sideFilter_->currentData().toInt());
-                handleFilterChanged();
-            });
-    connect(searchEdit_, &QLineEdit::textChanged, this, [this](const QString &text) {
-        proxyModel_->setClientOrderIdSearch(text);
-        handleFilterChanged();
-    });
-    connect(clearFiltersButton_, &QPushButton::clicked, this, &ExecutionReportsWidget::clearFilters);
-    connect(exportButton_, &QPushButton::clicked, this, &ExecutionReportsWidget::exportCsv);
-    connect(tableView_, &QTableView::doubleClicked, this,
-            &ExecutionReportsWidget::handleTableDoubleClick);
-
-    setStyleSheet(
-        "QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
-        "QComboBox, QLineEdit {"
-        " background-color: #ffffff;"
-        " border: 1px solid #e8e2d9;"
-        " border-radius: 10px;"
-        " padding: 4px 8px;"
-        " min-height: 34px;"
-        " color: #52443c;"
-        "}"
-        "QComboBox::drop-down {"
-        " subcontrol-origin: padding;"
-        " subcontrol-position: top right;"
-        " width: 18px;"
-        " border-left: 1px solid #e8e2d9;"
-        "}"
-        "QComboBox QAbstractItemView {"
-        " background-color: #ffffff;"
-        " color: #52443c;"
-        " border: 1px solid #e8e2d9;"
-        " selection-background-color: #f5f0ea;"
-        " selection-color: #1e1b19;"
-        " outline: 0px;"
-        "}"
-        "QPushButton {"
-        " background-color: #ffffff;"
-        " border: 1px solid #d6c3b7;"
-        " border-radius: 8px;"
-        " color: #52443c;"
-        " padding: 5px 10px;"
-        " min-height: 34px;"
-        "}"
-        "QPushButton:hover { background-color: #fdf8f4; }"
-        "QLabel { color: #52443c; }");
+void ExecutionReportsWidget::handleFilterChanged() {
+    updateShowingLabel();
 }
 
 void ExecutionReportsWidget::updateShowingLabel() {
-    showingLabel_->setText(
+    ui_->showingLabel->setText(
         QString("Showing %1 / %2 reports").arg(proxyModel_->rowCount()).arg(model_->totalCount()));
 }
 
 void ExecutionReportsWidget::updateSummaryBar() {
     const SummaryCounts counts = model_->summary();
-    totalReportsLabel_->setText(QString("Total reports: %1").arg(counts.total));
-    filledLabel_->setText(QString("Filled: %1").arg(counts.filled));
-    partialFilledLabel_->setText(QString("Partially filled: %1").arg(counts.pfilled));
-    rejectedLabel_->setText(QString("Rejected: %1").arg(counts.rejected));
-    newRestingLabel_->setText(QString("New/resting: %1").arg(counts.newResting));
+    ui_->totalReportsLabel->setText(QString("Total reports: %1").arg(counts.total));
+    ui_->filledLabel->setText(QString("Filled: %1").arg(counts.filled));
+    ui_->partialFilledLabel->setText(QString("Partially filled: %1").arg(counts.pfilled));
+    ui_->rejectedLabel->setText(QString("Rejected: %1").arg(counts.rejected));
+    ui_->newRestingLabel->setText(QString("New/resting: %1").arg(counts.newResting));
 }

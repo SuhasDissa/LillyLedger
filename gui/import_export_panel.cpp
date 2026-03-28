@@ -1,4 +1,5 @@
 #include "import_export_panel.h"
+#include "ui_import_export_panel.h"
 
 #include "engine/executionhandler.h"
 #include "engine/orderrouter.h"
@@ -11,32 +12,21 @@
 #include <QFileInfo>
 #include <QFont>
 #include <QFontDatabase>
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QHBoxLayout>
 #include <QHeaderView>
-#include <QLabel>
-#include <QLineEdit>
 #include <QLocale>
 #include <QMetaObject>
-#include <QPlainTextEdit>
-#include <QProgressBar>
-#include <QPushButton>
 #include <QScrollBar>
-#include <QSizePolicy>
-#include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTextStream>
 #include <QThread>
 #include <QTime>
-#include <QVBoxLayout>
 #include <QtGlobal>
 #include <vector>
 
 namespace {
 constexpr int kControlHeight = 34;
 constexpr int kPreviewRowHeight = 34;
-}
+} // namespace
 
 EngineWorker::EngineWorker(QString inputFilePath, QString outputFilePath, QObject *parent)
     : QObject(parent), inputFilePath_(std::move(inputFilePath)),
@@ -61,8 +51,9 @@ void EngineWorker::run() {
     }
 
     emit progress(33);
-    emit logLine(timestamped(QString("Parsed %1 orders")
-                                 .arg(QLocale().toString(static_cast<qlonglong>(parseResults.size())))));
+    emit logLine(
+        timestamped(QString("Parsed %1 orders")
+                        .arg(QLocale().toString(static_cast<qlonglong>(parseResults.size())))));
 
     phaseTimer.restart();
 
@@ -122,7 +113,9 @@ void EngineWorker::run() {
     emit finished(reports);
 }
 
-void EngineWorker::requestCancel() { cancelRequested_.store(true, std::memory_order_relaxed); }
+void EngineWorker::requestCancel() {
+    cancelRequested_.store(true, std::memory_order_relaxed);
+}
 
 bool EngineWorker::isCancelled() const {
     return cancelRequested_.load(std::memory_order_relaxed);
@@ -132,11 +125,87 @@ QString EngineWorker::timestamped(const QString &message) {
     return QString("[%1] %2").arg(QTime::currentTime().toString("HH:mm:ss")).arg(message);
 }
 
-ImportExportPanel::ImportExportPanel(QWidget *parent) : QWidget(parent) {
+ImportExportPanel::ImportExportPanel(QWidget *parent)
+    : QWidget(parent), ui_(new Ui::ImportExportPanel) {
     qRegisterMetaType<ExecutionReport>("ExecutionReport");
     qRegisterMetaType<QVector<ExecutionReport>>("QVector<ExecutionReport>");
 
-    setupUi();
+    ui_->setupUi(this);
+
+    // Preview table header configuration
+    ui_->previewTable->setHorizontalHeaderLabels(
+        {"Client Order ID", "Instrument", "Side", "Qty", "Price"});
+    ui_->previewTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui_->previewTable->setSelectionMode(QAbstractItemView::NoSelection);
+    ui_->previewTable->setWordWrap(false);
+    ui_->previewTable->verticalHeader()->setVisible(false);
+    ui_->previewTable->verticalHeader()->setDefaultSectionSize(kPreviewRowHeight);
+    auto *previewHeader = ui_->previewTable->horizontalHeader();
+    previewHeader->setMinimumSectionSize(56);
+    previewHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    previewHeader->setSectionResizeMode(4, QHeaderView::Stretch);
+
+    // Log view font
+    const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    ui_->logView->setFont(monoFont);
+    ui_->logView->setStyleSheet(
+        "QPlainTextEdit { background-color: #fdf8f4; color: #52443c; border: 1px solid #e8e2d9; }");
+
+    ui_->runButton->setStyleSheet("QPushButton {"
+                                  " background-color: #86522b;"
+                                  " color: #ffffff;"
+                                  " border: 1px solid #754624;"
+                                  " border-radius: 8px;"
+                                  " font-weight: 600;"
+                                  "}"
+                                  "QPushButton:hover {"
+                                  " background-color: #754624;"
+                                  "}"
+                                  "QPushButton:disabled {"
+                                  " background-color: #d6c3b7;"
+                                  " color: #8a776b;"
+                                  "}");
+
+    setStyleSheet("QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
+                  "QGroupBox {"
+                  " border: 1px solid #e8e2d9;"
+                  " border-radius: 10px;"
+                  " margin-top: 10px;"
+                  " font-weight: 700;"
+                  "}"
+                  "QGroupBox::title {"
+                  " subcontrol-origin: margin;"
+                  " left: 10px;"
+                  " padding: 0 6px;"
+                  " color: #52443c;"
+                  "}"
+                  "QLineEdit, QTableWidget, QProgressBar, QPlainTextEdit {"
+                  " background-color: #ffffff;"
+                  " border: 1px solid #e8e2d9;"
+                  " border-radius: 6px;"
+                  " color: #1e1b19;"
+                  "}"
+                  "QLineEdit { min-height: 34px; padding: 4px 8px; }"
+                  "QHeaderView::section {"
+                  " background-color: #f5f0ea;"
+                  " color: #84746a;"
+                  " border: 1px solid #e8e2d9;"
+                  " padding: 8px 10px;"
+                  "}"
+                  "QPushButton {"
+                  " background-color: #ffffff;"
+                  " border: 1px solid #d6c3b7;"
+                  " border-radius: 8px;"
+                  " color: #52443c;"
+                  " padding: 5px 10px;"
+                  " min-height: 34px;"
+                  "}"
+                  "QPushButton:hover { background-color: #fdf8f4; }");
+
+    setupConnections();
     setRunningState(false);
 }
 
@@ -158,30 +227,31 @@ void ImportExportPanel::onBrowseInputClicked() {
         return;
     }
 
-    inputPathEdit_->setText(filePath);
+    ui_->inputPathEdit->setText(filePath);
     loadInputPreview(filePath);
 
-    if (outputPathEdit_->text().isEmpty() || outputPathEdit_->text() == autoGeneratedOutputPath_) {
+    if (ui_->outputPathEdit->text().isEmpty() ||
+        ui_->outputPathEdit->text() == autoGeneratedOutputPath_) {
         autoGeneratedOutputPath_ = autoOutputPathForInput(filePath);
-        outputPathEdit_->setText(autoGeneratedOutputPath_);
+        ui_->outputPathEdit->setText(autoGeneratedOutputPath_);
     }
 
     if (!runInProgress_) {
-        runButton_->setEnabled(true);
+        ui_->runButton->setEnabled(true);
     }
 
     appendLogLine(timestamped(QString("Input selected: %1").arg(filePath)));
 }
 
 void ImportExportPanel::onBrowseOutputClicked() {
-    const QString initialPath = outputPathEdit_->text();
+    const QString initialPath = ui_->outputPathEdit->text();
     const QString filePath =
         QFileDialog::getSaveFileName(this, "Select Output CSV", initialPath, "CSV Files (*.csv)");
     if (filePath.isEmpty()) {
         return;
     }
 
-    outputPathEdit_->setText(filePath);
+    ui_->outputPathEdit->setText(filePath);
     autoGeneratedOutputPath_.clear();
     appendLogLine(timestamped(QString("Output selected: %1").arg(filePath)));
 }
@@ -198,17 +268,25 @@ void ImportExportPanel::onRunButtonClicked() {
     startWorker();
 }
 
-void ImportExportPanel::onClearLogClicked() { logView_->clear(); }
+void ImportExportPanel::onClearLogClicked() {
+    ui_->logView->clear();
+}
 
-void ImportExportPanel::onWorkerProgress(int percent) { progressBar_->setValue(percent); }
+void ImportExportPanel::onWorkerProgress(int percent) {
+    ui_->progressBar->setValue(percent);
+}
 
-void ImportExportPanel::onWorkerLogLine(const QString &line) { appendLogLine(line); }
+void ImportExportPanel::onWorkerLogLine(const QString &line) {
+    appendLogLine(line);
+}
 
 void ImportExportPanel::onWorkerFinished(QVector<ExecutionReport> reports) {
     emit resultsReady(reports);
 }
 
-void ImportExportPanel::onWorkerError(QString message) { appendLogLine(message); }
+void ImportExportPanel::onWorkerError(QString message) {
+    appendLogLine(message);
+}
 
 void ImportExportPanel::onWorkerThreadFinished() {
     if (workerThread_ != nullptr) {
@@ -220,171 +298,25 @@ void ImportExportPanel::onWorkerThreadFinished() {
     setRunningState(false);
 }
 
-void ImportExportPanel::setupUi() {
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(12);
-    mainLayout->addWidget(buildInputGroup());
-    mainLayout->addWidget(buildOutputGroup());
-    mainLayout->addWidget(buildRunGroup());
-    mainLayout->addStretch();
-
-    setStyleSheet(
-        "QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 12px; }"
-        "QGroupBox {"
-        " border: 1px solid #e8e2d9;"
-        " border-radius: 10px;"
-        " margin-top: 10px;"
-        " font-weight: 700;"
-        "}"
-        "QGroupBox::title {"
-        " subcontrol-origin: margin;"
-        " left: 10px;"
-        " padding: 0 6px;"
-        " color: #52443c;"
-        "}"
-        "QLineEdit, QTableWidget, QProgressBar, QPlainTextEdit {"
-        " background-color: #ffffff;"
-        " border: 1px solid #e8e2d9;"
-        " border-radius: 6px;"
-        " color: #1e1b19;"
-        "}"
-        "QLineEdit { min-height: 34px; padding: 4px 8px; }"
-        "QHeaderView::section {"
-        " background-color: #f5f0ea;"
-        " color: #84746a;"
-        " border: 1px solid #e8e2d9;"
-        " padding: 8px 10px;"
-        "}"
-        "QPushButton {"
-        " background-color: #ffffff;"
-        " border: 1px solid #d6c3b7;"
-        " border-radius: 8px;"
-        " color: #52443c;"
-        " padding: 5px 10px;"
-        " min-height: 34px;"
-        "}"
-        "QPushButton:hover { background-color: #fdf8f4; }");
-}
-
-QGroupBox *ImportExportPanel::buildInputGroup() {
-    auto *group = new QGroupBox("Input File", this);
-    auto *layout = new QVBoxLayout(group);
-
-    auto *pathLayout = new QHBoxLayout();
-    inputPathEdit_ = new QLineEdit(group);
-    inputPathEdit_->setReadOnly(true);
-    inputPathEdit_->setMinimumHeight(kControlHeight);
-    inputPathEdit_->setPlaceholderText("No file selected");
-    inputBrowseButton_ = new QPushButton("Browse…", group);
-    inputBrowseButton_->setMinimumHeight(kControlHeight);
-    pathLayout->addWidget(inputPathEdit_);
-    pathLayout->addWidget(inputBrowseButton_);
-    layout->addLayout(pathLayout);
-
-    previewTable_ = new QTableWidget(group);
-    previewTable_->setColumnCount(5);
-    previewTable_->setHorizontalHeaderLabels(
-        {"Client Order ID", "Instrument", "Side", "Qty", "Price"});
-    previewTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    previewTable_->setSelectionMode(QAbstractItemView::NoSelection);
-    previewTable_->setWordWrap(false);
-    previewTable_->verticalHeader()->setVisible(false);
-    previewTable_->verticalHeader()->setDefaultSectionSize(kPreviewRowHeight);
-    auto *previewHeader = previewTable_->horizontalHeader();
-    previewHeader->setMinimumSectionSize(56);
-    previewHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    previewHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    previewHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    previewHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-    previewHeader->setSectionResizeMode(4, QHeaderView::Stretch);
-    layout->addWidget(previewTable_);
-
-    rowCountLabel_ = new QLabel("0 rows detected", group);
-    layout->addWidget(rowCountLabel_);
-
-    connect(inputBrowseButton_, &QPushButton::clicked, this,
+void ImportExportPanel::setupConnections() {
+    connect(ui_->inputBrowseButton, &QPushButton::clicked, this,
             &ImportExportPanel::onBrowseInputClicked);
-    return group;
-}
-
-QGroupBox *ImportExportPanel::buildOutputGroup() {
-    auto *group = new QGroupBox("Output File", this);
-    auto *layout = new QVBoxLayout(group);
-
-    auto *pathLayout = new QHBoxLayout();
-    outputPathEdit_ = new QLineEdit(group);
-    outputPathEdit_->setReadOnly(true);
-    outputPathEdit_->setMinimumHeight(kControlHeight);
-    outputPathEdit_->setPlaceholderText("Auto-generated alongside input");
-    outputBrowseButton_ = new QPushButton("Browse…", group);
-    outputBrowseButton_->setMinimumHeight(kControlHeight);
-    pathLayout->addWidget(outputPathEdit_);
-    pathLayout->addWidget(outputBrowseButton_);
-    layout->addLayout(pathLayout);
-
-    connect(outputBrowseButton_, &QPushButton::clicked, this,
+    connect(ui_->outputBrowseButton, &QPushButton::clicked, this,
             &ImportExportPanel::onBrowseOutputClicked);
-    return group;
-}
-
-QGroupBox *ImportExportPanel::buildRunGroup() {
-    auto *group = new QGroupBox("Run Engine", this);
-    auto *layout = new QVBoxLayout(group);
-
-    progressBar_ = new QProgressBar(group);
-    progressBar_->setRange(0, 100);
-    progressBar_->setValue(0);
-    progressBar_->setVisible(false);
-    layout->addWidget(progressBar_);
-
-    runButton_ = new QPushButton("▶ Run Matching Engine", group);
-    runButton_->setEnabled(false);
-    runButton_->setMinimumHeight(48);
-    runButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    runButton_->setStyleSheet(
-        "QPushButton {"
-        " background-color: #86522b;"
-        " color: #ffffff;"
-        " border: 1px solid #754624;"
-        " border-radius: 8px;"
-        " font-weight: 600;"
-        "}"
-        "QPushButton:hover {"
-        " background-color: #754624;"
-        "}"
-        "QPushButton:disabled {"
-        " background-color: #d6c3b7;"
-        " color: #8a776b;"
-        "}");
-    layout->addWidget(runButton_);
-
-    logView_ = new QPlainTextEdit(group);
-    logView_->setReadOnly(true);
-    logView_->setMinimumHeight(160);
-    const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    logView_->setFont(monoFont);
-    logView_->setStyleSheet(
-        "QPlainTextEdit { background-color: #fdf8f4; color: #52443c; border: 1px solid #e8e2d9; }");
-    layout->addWidget(logView_);
-
-    clearLogButton_ = new QPushButton("Clear Log", group);
-    layout->addWidget(clearLogButton_);
-
-    connect(runButton_, &QPushButton::clicked, this, &ImportExportPanel::onRunButtonClicked);
-    connect(clearLogButton_, &QPushButton::clicked, this, &ImportExportPanel::onClearLogClicked);
-
-    return group;
+    connect(ui_->runButton, &QPushButton::clicked, this, &ImportExportPanel::onRunButtonClicked);
+    connect(ui_->clearLogButton, &QPushButton::clicked, this,
+            &ImportExportPanel::onClearLogClicked);
 }
 
 void ImportExportPanel::loadInputPreview(const QString &filePath) {
-    previewTable_->clearContents();
-    previewTable_->setRowCount(0);
+    ui_->previewTable->clearContents();
+    ui_->previewTable->setRowCount(0);
 
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        rowCountLabel_->setText("0 rows detected");
-        appendLogLine(timestamped(QString("Failed to open input file for preview: %1").arg(filePath)));
+        ui_->rowCountLabel->setText("0 rows detected");
+        appendLogLine(
+            timestamped(QString("Failed to open input file for preview: %1").arg(filePath)));
         return;
     }
 
@@ -421,22 +353,22 @@ void ImportExportPanel::loadInputPreview(const QString &filePath) {
         }
     }
 
-    previewTable_->setRowCount(previewRows.size());
+    ui_->previewTable->setRowCount(previewRows.size());
     for (int row = 0; row < previewRows.size(); ++row) {
         const QStringList &fields = previewRows.at(row);
         for (int col = 0; col < 5; ++col) {
             auto *item = new QTableWidgetItem(fields.at(col));
-            previewTable_->setItem(row, col, item);
+            ui_->previewTable->setItem(row, col, item);
         }
     }
 
-    rowCountLabel_->setText(
+    ui_->rowCountLabel->setText(
         QString("%1 rows detected").arg(QLocale().toString(static_cast<qlonglong>(totalRows))));
 }
 
 void ImportExportPanel::appendLogLine(const QString &line) {
-    logView_->appendPlainText(line);
-    auto *scrollBar = logView_->verticalScrollBar();
+    ui_->logView->appendPlainText(line);
+    auto *scrollBar = ui_->logView->verticalScrollBar();
     scrollBar->setValue(scrollBar->maximum());
 }
 
@@ -444,24 +376,24 @@ void ImportExportPanel::setRunningState(bool running) {
     runInProgress_ = running;
 
     if (running) {
-        progressBar_->setVisible(true);
-        progressBar_->setValue(0);
-        runButton_->setText("⏹ Cancel");
-        runButton_->setEnabled(true);
-        inputBrowseButton_->setEnabled(false);
-        outputBrowseButton_->setEnabled(false);
+        ui_->progressBar->setVisible(true);
+        ui_->progressBar->setValue(0);
+        ui_->runButton->setText("⏹ Cancel");
+        ui_->runButton->setEnabled(true);
+        ui_->inputBrowseButton->setEnabled(false);
+        ui_->outputBrowseButton->setEnabled(false);
         return;
     }
 
-    progressBar_->setVisible(false);
-    runButton_->setText("▶ Run Matching Engine");
-    runButton_->setEnabled(!inputPathEdit_->text().trimmed().isEmpty());
-    inputBrowseButton_->setEnabled(true);
-    outputBrowseButton_->setEnabled(true);
+    ui_->progressBar->setVisible(false);
+    ui_->runButton->setText("▶ Run Matching Engine");
+    ui_->runButton->setEnabled(!ui_->inputPathEdit->text().trimmed().isEmpty());
+    ui_->inputBrowseButton->setEnabled(true);
+    ui_->outputBrowseButton->setEnabled(true);
 }
 
 void ImportExportPanel::startWorker() {
-    const QString inputPath = inputPathEdit_->text().trimmed();
+    const QString inputPath = ui_->inputPathEdit->text().trimmed();
     if (inputPath.isEmpty()) {
         return;
     }
@@ -493,21 +425,21 @@ void ImportExportPanel::startWorker() {
 }
 
 QString ImportExportPanel::ensureOutputPath() {
-    const QString existing = outputPathEdit_->text().trimmed();
+    const QString existing = ui_->outputPathEdit->text().trimmed();
     if (!existing.isEmpty()) {
         return existing;
     }
 
-    const QString generated = autoOutputPathForInput(inputPathEdit_->text().trimmed());
+    const QString generated = autoOutputPathForInput(ui_->inputPathEdit->text().trimmed());
     autoGeneratedOutputPath_ = generated;
-    outputPathEdit_->setText(generated);
+    ui_->outputPathEdit->setText(generated);
     return generated;
 }
 
 QString ImportExportPanel::autoOutputPathForInput(const QString &inputFilePath) {
     const QFileInfo inputInfo(inputFilePath);
-    const QString baseName = inputInfo.completeBaseName().isEmpty() ? "orders"
-                                                                     : inputInfo.completeBaseName();
+    const QString baseName =
+        inputInfo.completeBaseName().isEmpty() ? "orders" : inputInfo.completeBaseName();
     return QDir(inputInfo.absolutePath()).filePath(baseName + "_out.csv");
 }
 

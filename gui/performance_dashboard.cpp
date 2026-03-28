@@ -1,24 +1,18 @@
 #include "performance_dashboard.h"
+#include "ui_performance_dashboard.h"
 
 #include "core/enum/instrument.h"
 #include "core/enum/status.h"
 #include <QAbstractItemView>
 #include <QBrush>
-#include <QFrame>
-#include <QGridLayout>
-#include <QHBoxLayout>
 #include <QHeaderView>
-#include <QLabel>
 #include <QLocale>
-#include <QPainter>
 #include <QPaintEvent>
+#include <QPainter>
 #include <QSet>
-#include <QStackedLayout>
-#include <QStyledItemDelegate>
 #include <QStyleOptionProgressBar>
-#include <QTableWidget>
+#include <QStyledItemDelegate>
 #include <QTableWidgetItem>
-#include <QVBoxLayout>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLegend>
@@ -89,7 +83,8 @@ class FillRateProgressDelegate : public QStyledItemDelegate {
 QLabel *buildLegendSwatch(const QString &hexColor, QWidget *parent) {
     auto *swatch = new QLabel(parent);
     swatch->setFixedSize(12, 12);
-    swatch->setStyleSheet(QString("QLabel { background-color: %1; border-radius: 2px; }").arg(hexColor));
+    swatch->setStyleSheet(
+        QString("QLabel { background-color: %1; border-radius: 2px; }").arg(hexColor));
     return swatch;
 }
 } // namespace
@@ -157,125 +152,35 @@ void PhaseBreakdownBar::paintEvent(QPaintEvent *event) {
     painter.restore();
 }
 
-PerformanceDashboard::PerformanceDashboard(QWidget *parent) : QWidget(parent) { setupUi(); }
+PerformanceDashboard::PerformanceDashboard(QWidget *parent)
+    : QWidget(parent), ui_(new Ui::PerformanceDashboard) {
+    ui_->setupUi(this);
 
-void PerformanceDashboard::updateStats(const PerfStats &stats) {
-    setHasRunData(true);
-    updateKpis(stats);
-    phaseBar_->setStats(stats);
-    updatePhaseLegend(stats);
-    updateInstrumentTable(latestReports_);
-}
+    // KPI card styles
+    const QString kpiCardStyle = "QFrame {"
+                                 "  background-color: #ffffff;"
+                                 "  border: 1px solid #ead8ce;"
+                                 "  border-radius: 10px;"
+                                 "}";
+    ui_->kpiCard1->setStyleSheet(kpiCardStyle);
+    ui_->kpiCard2->setStyleSheet(kpiCardStyle);
+    ui_->kpiCard3->setStyleSheet(kpiCardStyle);
+    ui_->kpiCard4->setStyleSheet(kpiCardStyle);
 
-void PerformanceDashboard::addRunHistory(const PerfStats &stats) {
-    setHasRunData(true);
-    updateStats(stats);
+    // Phase breakdown container style
+    ui_->phaseContainer->setStyleSheet("QFrame {"
+                                       "  background-color: #ffffff;"
+                                       "  border: 1px solid #ead8ce;"
+                                       "  border-radius: 10px;"
+                                       "}");
 
-    ++runCounter_;
-    runHistory_.push_back(RunSample{runCounter_, stats});
-    while (static_cast<int>(runHistory_.size()) > kMaxHistoryRuns) {
-        runHistory_.pop_front();
-    }
-    updateHistoryChart();
-}
+    // Legend swatches
+    ui_->parseSwatch->setStyleSheet("background-color: #4a7eb5; border-radius: 4px;");
+    ui_->matchSwatch->setStyleSheet("background-color: #2c694d; border-radius: 4px;");
+    ui_->writeSwatch->setStyleSheet("background-color: #c2855a; border-radius: 4px;");
 
-void PerformanceDashboard::updateStats(const PerfStats &stats,
-                                       const std::vector<ExecutionReport> &reports) {
-    latestReports_ = reports;
-    updateStats(stats);
-}
-
-void PerformanceDashboard::addRunHistory(const PerfStats &stats,
-                                         const std::vector<ExecutionReport> &reports) {
-    latestReports_ = reports;
-    addRunHistory(stats);
-}
-
-void PerformanceDashboard::setupUi() {
-    stackedLayout_ = new QStackedLayout(this);
-    stackedLayout_->setContentsMargins(0, 0, 0, 0);
-
-    placeholderWidget_ = new QWidget(this);
-    auto *placeholderLayout = new QVBoxLayout(placeholderWidget_);
-    placeholderLayout->setContentsMargins(0, 0, 0, 0);
-    placeholderLayout->addStretch();
-    auto *emojiLabel = new QLabel("🌸", placeholderWidget_);
-    emojiLabel->setAlignment(Qt::AlignCenter);
-    emojiLabel->setStyleSheet("QLabel { font-size: 52px; }");
-    auto *placeholderText = new QLabel("Run the engine to see performance metrics", placeholderWidget_);
-    placeholderText->setAlignment(Qt::AlignCenter);
-    placeholderText->setStyleSheet(
-        "QLabel {"
-        "  color: #9a8a7e;"
-        "  font-size: 15px;"
-        "  font-family: 'Georgia', 'Palatino Linotype', serif;"
-        "  font-style: italic;"
-        "}");
-    placeholderLayout->addWidget(emojiLabel);
-    placeholderLayout->addWidget(placeholderText);
-    placeholderLayout->addStretch();
-
-    contentWidget_ = new QWidget(this);
-    contentWidget_->setObjectName("perfContent");
-    contentWidget_->setStyleSheet("QWidget#perfContent { background-color: #faf8f4; }");
-    auto *mainLayout = new QVBoxLayout(contentWidget_);
-    mainLayout->setContentsMargins(24, 20, 24, 20);
-    mainLayout->setSpacing(16);
-
-    auto *kpiRow = new QHBoxLayout();
-    kpiRow->setSpacing(14);
-    kpiRow->addWidget(buildKpiCard("Orders Processed", &ordersValueLabel_, "this run"));
-    kpiRow->addWidget(buildKpiCard("Reports Generated", &reportsValueLabel_, "this run"));
-    kpiRow->addWidget(buildKpiCard("Throughput", &throughputValueLabel_, "orders/sec"));
-    kpiRow->addWidget(buildKpiCard("Total Time", &totalTimeValueLabel_, "this run"));
-    mainLayout->addLayout(kpiRow);
-
-    auto *phaseContainer = new QFrame(contentWidget_);
-    phaseContainer->setStyleSheet(
-        "QFrame {"
-        "  background-color: #ffffff;"
-        "  border: 1px solid #ead8ce;"
-        "  border-radius: 10px;"
-        "}");
-    auto *phaseLayout = new QVBoxLayout(phaseContainer);
-    phaseLayout->setContentsMargins(16, 14, 16, 14);
-    phaseLayout->setSpacing(10);
-    phaseBar_ = new PhaseBreakdownBar(phaseContainer);
-    phaseLayout->addWidget(phaseBar_);
-
-    auto *legendRow = new QHBoxLayout();
-    legendRow->setSpacing(20);
-
-    auto addLegendItem = [phaseContainer, legendRow](const QString &name, const QString &color,
-                                                      QLabel **valueLabel) {
-        auto *itemLayout = new QHBoxLayout();
-        itemLayout->setSpacing(6);
-        itemLayout->addWidget(buildLegendSwatch(color, phaseContainer));
-        auto *nameLabel = new QLabel(name, phaseContainer);
-        nameLabel->setStyleSheet(
-            "QLabel { color: #7a6a5e; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }");
-        *valueLabel = new QLabel("0.00 ms", phaseContainer);
-        (*valueLabel)->setStyleSheet(
-            "QLabel {"
-            "  color: #1e1b19;"
-            "  font-weight: 700;"
-            "  font-family: 'Courier New', 'Consolas', monospace;"
-            "  font-size: 12px;"
-            "}");
-        itemLayout->addWidget(nameLabel);
-        itemLayout->addWidget(*valueLabel);
-        itemLayout->addStretch();
-        legendRow->addLayout(itemLayout);
-    };
-
-    addLegendItem("Parse", "#4a7eb5", &parseLegendValueLabel_);
-    addLegendItem("Match", "#2c694d", &matchLegendValueLabel_);
-    addLegendItem("Write", "#c2855a", &writeLegendValueLabel_);
-    legendRow->addStretch();
-    phaseLayout->addLayout(legendRow);
-    mainLayout->addWidget(phaseContainer);
-
-    historySeries_ = new QLineSeries(contentWidget_);
+    // Chart setup
+    historySeries_ = new QLineSeries(this);
     historySeries_->setColor(QColor("#7b5fa3"));
     QPen seriesPen(QColor("#7b5fa3"));
     seriesPen.setWidth(2);
@@ -311,36 +216,33 @@ void PerformanceDashboard::setupUi() {
     historySeries_->attachAxis(axisX_);
     historySeries_->attachAxis(axisY_);
 
-    chartView_ = new QChartView(chart, contentWidget_);
-    chartView_->setRenderHint(QPainter::Antialiasing);
-    chartView_->setRubberBand(QChartView::HorizontalRubberBand);
-    chartView_->setMinimumHeight(220);
-    chartView_->setStyleSheet(
-        "QChartView {"
-        "  background-color: #ffffff;"
-        "  border: 1px solid #ead8ce;"
-        "  border-radius: 10px;"
-        "}");
-    mainLayout->addWidget(chartView_, 1);
+    ui_->chartView->setChart(chart);
+    ui_->chartView->setRenderHint(QPainter::Antialiasing);
+    ui_->chartView->setRubberBand(QChartView::HorizontalRubberBand);
+    ui_->chartView->setStyleSheet("QChartView {"
+                                  "  background-color: #ffffff;"
+                                  "  border: 1px solid #ead8ce;"
+                                  "  border-radius: 10px;"
+                                  "}");
 
-    instrumentTable_ = new QTableWidget(kInstrumentCount, 4, contentWidget_);
-    instrumentTable_->setHorizontalHeaderLabels(
+    // Instrument table
+    ui_->instrumentTable->setHorizontalHeaderLabels(
         {"Instrument", "Orders Routed", "Fill Rate %", "Avg Fill Qty"});
-    instrumentTable_->setItemDelegateForColumn(2, new FillRateProgressDelegate(instrumentTable_));
-    instrumentTable_->setSelectionMode(QAbstractItemView::NoSelection);
-    instrumentTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    instrumentTable_->verticalHeader()->setVisible(false);
-    instrumentTable_->setWordWrap(false);
-    instrumentTable_->setShowGrid(false);
-    instrumentTable_->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
-    auto *instrumentHeader = instrumentTable_->horizontalHeader();
+    ui_->instrumentTable->setItemDelegateForColumn(
+        2, new FillRateProgressDelegate(ui_->instrumentTable));
+    ui_->instrumentTable->setSelectionMode(QAbstractItemView::NoSelection);
+    ui_->instrumentTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui_->instrumentTable->verticalHeader()->setVisible(false);
+    ui_->instrumentTable->setWordWrap(false);
+    ui_->instrumentTable->setShowGrid(false);
+    ui_->instrumentTable->verticalHeader()->setDefaultSectionSize(kTableRowHeight);
+    auto *instrumentHeader = ui_->instrumentTable->horizontalHeader();
     instrumentHeader->setMinimumSectionSize(72);
     instrumentHeader->setSectionResizeMode(0, QHeaderView::Stretch);
     instrumentHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     instrumentHeader->setSectionResizeMode(2, QHeaderView::Stretch);
     instrumentHeader->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-    instrumentTable_->setMinimumHeight(220);
-    instrumentTable_->setStyleSheet(
+    ui_->instrumentTable->setStyleSheet(
         "QTableWidget {"
         "  background-color: #ffffff;"
         "  color: #1e1b19;"
@@ -361,15 +263,9 @@ void PerformanceDashboard::setupUi() {
         "  font-size: 10px;"
         "  letter-spacing: 0.5px;"
         "}");
-    mainLayout->addWidget(instrumentTable_);
 
-    stackedLayout_->addWidget(placeholderWidget_);
-    stackedLayout_->addWidget(contentWidget_);
-
-    setStyleSheet(
-        "PerformanceDashboard { background-color: #faf8f4; }"
-        "QWidget#perfContent { background-color: #faf8f4; }"
-        "QLabel { color: #3b312b; }");
+    setStyleSheet("PerformanceDashboard { background-color: #faf8f4; }"
+                  "QLabel { color: #3b312b; }");
 
     updateKpis(PerfStats{});
     updatePhaseLegend(PerfStats{});
@@ -378,57 +274,44 @@ void PerformanceDashboard::setupUi() {
     setHasRunData(false);
 }
 
-QFrame *PerformanceDashboard::buildKpiCard(const QString &title, QLabel **valueLabel,
-                                           const QString &subtitle) {
-    auto *card = new QFrame(contentWidget_);
-    card->setStyleSheet(
-        "QFrame {"
-        "  background-color: #ffffff;"
-        "  border: 1px solid #ead8ce;"
-        "  border-radius: 10px;"
-        "}");
+PerformanceDashboard::~PerformanceDashboard() {
+    delete ui_;
+}
 
-    auto *layout = new QVBoxLayout(card);
-    layout->setContentsMargins(20, 16, 20, 16);
-    layout->setSpacing(6);
+void PerformanceDashboard::updateStats(const PerfStats &stats) {
+    setHasRunData(true);
+    updateKpis(stats);
+    ui_->phaseBar->setStats(stats);
+    updatePhaseLegend(stats);
+    updateInstrumentTable(latestReports_);
+}
 
-    auto *titleLabel = new QLabel(title, card);
-    titleLabel->setStyleSheet(
-        "QLabel {"
-        "  color: #9a8a7e;"
-        "  font-size: 10px;"
-        "  font-weight: 700;"
-        "  letter-spacing: 1px;"
-        "  font-family: 'DM Sans', 'Segoe UI', sans-serif;"
-        "}");
+void PerformanceDashboard::addRunHistory(const PerfStats &stats) {
+    setHasRunData(true);
+    updateStats(stats);
 
-    *valueLabel = new QLabel("0", card);
-    (*valueLabel)->setStyleSheet(
-        "QLabel {"
-        "  color: #1e1b19;"
-        "  font-size: 26px;"
-        "  font-weight: 700;"
-        "  font-family: 'Courier New', 'Consolas', monospace;"
-        "}");
+    ++runCounter_;
+    runHistory_.push_back(RunSample{runCounter_, stats});
+    while (static_cast<int>(runHistory_.size()) > kMaxHistoryRuns) {
+        runHistory_.pop_front();
+    }
+    updateHistoryChart();
+}
 
-    auto *subtitleLabel = new QLabel(subtitle, card);
-    subtitleLabel->setStyleSheet(
-        "QLabel {"
-        "  color: #c2855a;"
-        "  font-size: 10px;"
-        "  font-weight: 600;"
-        "  letter-spacing: 0.5px;"
-        "  font-family: 'DM Sans', 'Segoe UI', sans-serif;"
-        "}");
+void PerformanceDashboard::updateStats(const PerfStats &stats,
+                                       const std::vector<ExecutionReport> &reports) {
+    latestReports_ = reports;
+    updateStats(stats);
+}
 
-    layout->addWidget(titleLabel);
-    layout->addWidget(*valueLabel);
-    layout->addWidget(subtitleLabel);
-    return card;
+void PerformanceDashboard::addRunHistory(const PerfStats &stats,
+                                         const std::vector<ExecutionReport> &reports) {
+    latestReports_ = reports;
+    addRunHistory(stats);
 }
 
 void PerformanceDashboard::setHasRunData(bool hasRunData) {
-    stackedLayout_->setCurrentWidget(hasRunData ? contentWidget_ : placeholderWidget_);
+    ui_->stackedWidget->setCurrentIndex(hasRunData ? 1 : 0);
 }
 
 void PerformanceDashboard::updateKpis(const PerfStats &stats) {
@@ -436,16 +319,17 @@ void PerformanceDashboard::updateKpis(const PerfStats &stats) {
     const double throughput =
         totalSeconds > 0.0 ? static_cast<double>(stats.orderCount) / totalSeconds : 0.0;
 
-    ordersValueLabel_->setText(QLocale().toString(stats.orderCount));
-    reportsValueLabel_->setText(QLocale().toString(stats.reportCount));
-    throughputValueLabel_->setText(QString("%1M orders/sec").arg(throughput / 1000000.0, 0, 'f', 2));
-    totalTimeValueLabel_->setText(QString("%1 ms").arg(stats.totalUs / 1000.0, 0, 'f', 2));
+    ui_->ordersValueLabel->setText(QLocale().toString(stats.orderCount));
+    ui_->reportsValueLabel->setText(QLocale().toString(stats.reportCount));
+    ui_->throughputValueLabel->setText(
+        QString("%1M orders/sec").arg(throughput / 1000000.0, 0, 'f', 2));
+    ui_->totalTimeValueLabel->setText(QString("%1 ms").arg(stats.totalUs / 1000.0, 0, 'f', 2));
 }
 
 void PerformanceDashboard::updatePhaseLegend(const PerfStats &stats) {
-    parseLegendValueLabel_->setText(formatMicrosecondsAsMs(stats.parseUs));
-    matchLegendValueLabel_->setText(formatMicrosecondsAsMs(stats.matchUs));
-    writeLegendValueLabel_->setText(formatMicrosecondsAsMs(stats.writeUs));
+    ui_->parseLegendValueLabel->setText(formatMicrosecondsAsMs(stats.parseUs));
+    ui_->matchLegendValueLabel->setText(formatMicrosecondsAsMs(stats.matchUs));
+    ui_->writeLegendValueLabel->setText(formatMicrosecondsAsMs(stats.writeUs));
 }
 
 void PerformanceDashboard::updateHistoryChart() {
@@ -503,13 +387,14 @@ void PerformanceDashboard::updateInstrumentTable(const std::vector<ExecutionRepo
         const int routedCount = a.routedOrders.size();
         const int filledCount = a.filledOrders.size();
         const double fillRate = routedCount > 0 ? (100.0 * filledCount / routedCount) : 0.0;
-        const double avgFillQty = filledCount > 0 ? static_cast<double>(a.totalFillQty) / filledCount : 0.0;
+        const double avgFillQty =
+            filledCount > 0 ? static_cast<double>(a.totalFillQty) / filledCount : 0.0;
 
         auto ensureItem = [this, row](int column) {
-            QTableWidgetItem *item = instrumentTable_->item(row, column);
+            QTableWidgetItem *item = ui_->instrumentTable->item(row, column);
             if (item == nullptr) {
                 item = new QTableWidgetItem();
-                instrumentTable_->setItem(row, column, item);
+                ui_->instrumentTable->setItem(row, column, item);
             }
             return item;
         };
