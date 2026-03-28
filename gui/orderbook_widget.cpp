@@ -75,22 +75,12 @@ OrderBookWidget::OrderBookWidget(QWidget *parent) : QWidget(parent), ui_(new Ui:
     ui_->instrumentHeaderLabel->setStyleSheet(
         "QLabel#OrderBookTitle {"
         "  color: #1e1b19;"
-        "  font-family: 'Georgia', 'Palatino Linotype', serif;"
-        "  font-size: 17px;"
-        "  font-weight: 400;"
-        "  font-style: italic;"
-        "  letter-spacing: 0.5px;"
+        "  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;"
+        "  font-size: 16px;"
+        "  font-weight: 600;"
+        "  font-style: normal;"
+        "  letter-spacing: 0px;"
         "}");
-    ui_->spreadLabel->setStyleSheet("QLabel {"
-                                    "  color: #52443c;"
-                                    "  font-weight: 700;"
-                                    "  font-size: 11px;"
-                                    "  background-color: #f4ece8;"
-                                    "  border: 1px solid #d6c3b7;"
-                                    "  border-radius: 6px;"
-                                    "  padding: 4px 10px;"
-                                    "  letter-spacing: 0.5px;"
-                                    "}");
     setupBookTable(ui_->bookTable);
     connect(ui_->bookTable, &QTableWidget::cellClicked, this, [this](int row, int column) {
         int priceColumn = -1;
@@ -150,7 +140,6 @@ void OrderBookWidget::updateBook(const std::vector<BookEntry> &buys,
     const std::vector<BookRow> bidRows = buildBookRows(buys);
     const std::vector<BookRow> askRows = buildBookRows(sells);
 
-    updateSpreadLabel(bidRows, askRows);
     renderBookTable(bidRows, askRows);
 }
 
@@ -347,13 +336,7 @@ void OrderBookWidget::renderBookTable(const std::vector<BookRow> &bidRows,
 
 void OrderBookWidget::updateSpreadLabel(const std::vector<BookRow> &bidRows,
                                         const std::vector<BookRow> &askRows) {
-    if (bidRows.empty() || askRows.empty()) {
-        ui_->spreadLabel->setText("Spread: N/A");
-        return;
-    }
-
-    const double spread = askRows.front().price - bidRows.front().price;
-    ui_->spreadLabel->setText(QString("Spread: $%1").arg(spread, 0, 'f', 2));
+    // Spread calculation removed by user request
 }
 
 void OrderBookWidget::animateCellsFlash(QTableWidget *table, int row, int firstColumn,

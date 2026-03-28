@@ -149,10 +149,8 @@ ManualOrderEntryWidget::ManualOrderEntryWidget(QWidget *parent)
     setupConnections();
 
     setStyleSheet("QWidget { background-color: #fff8f5; color: #1e1b19; font-size: 13px; }"
-                  "QGroupBox { border: 1px solid #eee7e3; border-radius: 6px; margin-top: 12px; "
-                  "font-weight: 600; font-size: 11px; letter-spacing: 1px; }"
-                  "QGroupBox::title { subcontrol-origin: margin; left: 16px; padding: 0 4px; "
-                  "background-color: #fff8f5; color: #52443c; }"
+                  "QFrame#orderCard { background-color: #ffffff; border: 1px solid #d6c3b7; "
+                  "border-radius: 8px; }"
                   "QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {"
                   " background-color: #ffffff; color: #1e1b19; border: 1px solid #d6c3b7; "
                   "border-radius: 6px; padding: 4px 12px; min-height: 32px; }"

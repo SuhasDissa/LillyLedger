@@ -161,7 +161,7 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
     ui_->setupUi(this);
 
     // KPI card styles
-    const QString kpiCardStyle = "QFrame {"
+    const QString kpiCardStyle = ".QFrame {"
                                  "  background-color: #ffffff;"
                                  "  border: 1px solid #d6c3b7;"
                                  "  border-radius: 6px;"
@@ -172,7 +172,7 @@ PerformanceDashboard::PerformanceDashboard(QWidget *parent)
     ui_->kpiCard4->setStyleSheet(kpiCardStyle);
 
     // Phase breakdown container style
-    ui_->phaseContainer->setStyleSheet("QFrame {"
+    ui_->phaseContainer->setStyleSheet(".QFrame {"
                                        "  background-color: #ffffff;"
                                        "  border: 1px solid #d6c3b7;"
                                        "  border-radius: 6px;"

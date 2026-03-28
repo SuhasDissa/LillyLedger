@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-static constexpr int kMaxClientOrderIdChars = 7; // without null terminator
+static constexpr int kMaxClientOrderIdChars = 7; 
 static constexpr int kMinQuantity = 10;
 static constexpr int kMaxQuantity = 1000;
 static constexpr int kQuantityStep = 10;
@@ -169,8 +169,7 @@ ParseResult CSVReader::parseRawRow(const std::string &line) {
     raw.price = tokens[4];
 
     ParseResult result = buildOrder(raw);
-    // Always copy the raw client order ID so that rejected execution reports
-    // can include it.  buildOrder() only writes it on the success path.
+
     if (!result.ok) {
         std::snprintf(result.order.clientOrderId, sizeof(result.order.clientOrderId), "%.7s",
                       raw.clientOrderId.c_str());

@@ -427,9 +427,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
     });
     connect(ui_->runEngineButton, &QPushButton::clicked, this, &MainWindow::runEngine);
     connect(ui_->exportCsvButton, &QPushButton::clicked, this, [this]() {
-        const QString filePath =
-            QFileDialog::getSaveFileName(this, "Save CSV", {}, "CSV Files (*.csv)");
+        QString filePath = QFileDialog::getSaveFileName(this, "Save CSV", {}, "CSV Files (*.csv)");
         if (!filePath.isEmpty()) {
+            if (!filePath.endsWith(".csv", Qt::CaseInsensitive)) {
+                filePath += ".csv";
+            }
             exportResults(filePath);
         }
     });
@@ -529,6 +531,20 @@ void MainWindow::applyLightTheme() {
 
 /* ── Reset & base ──────────────────────────────────────────────────── */
 QMainWindow, QDialog { background-color: #fff8f5; }
+
+QMessageBox { background-color: #ffffff; border: 1px solid #d6c3b7; }
+QMessageBox QPushButton {
+    background-color: #86522b;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 80px;
+    min-height: 32px;
+}
+QMessageBox QPushButton:hover { background-color: #6a3b16; }
+QMessageBox QPushButton:pressed { background-color: #482100; }
 
 QLabel      { font-size: 13px; color: #1e1b19; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; }
 QPushButton { font-size: 13px; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; min-height: 36px; }

@@ -5,7 +5,6 @@
 
 namespace utils {
 
-// Returns the current UTC time as a fixed-width string: YYYYMMDD-HHMMSS.sss
 std::string currentTransactTime() {
     using namespace std::chrono;
 
@@ -16,7 +15,6 @@ std::string currentTransactTime() {
     std::tm tm{};
     gmtime_r(&t, &tm);
 
-    // Format: YYYYMMDD-HHMMSS.mmm  (19 chars + null terminator).
     char buf[20];
     std::strftime(buf, 16, "%Y%m%d-%H%M%S", &tm);
     int m = static_cast<int>(ms.count());
@@ -28,4 +26,4 @@ std::string currentTransactTime() {
     return buf;
 }
 
-} // namespace utils
+} 
