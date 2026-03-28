@@ -22,6 +22,8 @@ set(GUI_SOURCES
     gui/mainwindow.cpp
     gui/import_export_panel.cpp
     gui/orderbook_widget.cpp
+    gui/exec_reports_widget.cpp
+    gui/order_entry_widget.cpp
     ${BACKEND_SOURCES}
 )
 

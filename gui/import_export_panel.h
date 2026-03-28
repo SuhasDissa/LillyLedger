@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/executionreport.h"
+#include "qt_metatypes.h"
 #include <QVector>
 #include <QWidget>
 #include <atomic>
@@ -13,9 +13,6 @@ class QPushButton;
 class QLabel;
 class QTableWidget;
 class QThread;
-
-Q_DECLARE_METATYPE(ExecutionReport)
-Q_DECLARE_METATYPE(QVector<ExecutionReport>)
 
 class EngineWorker : public QObject {
     Q_OBJECT
