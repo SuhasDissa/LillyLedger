@@ -11,6 +11,8 @@
 #include <cstddef>
 #include <vector>
 
+class QAbstractTableModel;
+
 class QStackedWidget;
 
 class ManualOrderEntryWidget;
@@ -51,13 +53,8 @@ class MainWindow : public QMainWindow {
     void updateSummaryBar(int filteredCount);
     Instrument selectedInstrument() const;
 
-    static QString instrumentName(Instrument instrument);
-    static QString sideName(Side side);
-    static QString statusName(Status status);
-    static QString compactTransactTime(const char *text);
-    static QString fixedCharToQString(const char *text, std::size_t maxLen);
-
     Ui::MainWindow *ui_;
+    QAbstractTableModel *reportsModel_{nullptr};
 
     QString inputFilePath_;
     std::vector<ExecutionReport> executionReports_;

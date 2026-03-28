@@ -8,6 +8,7 @@
 #include "orderbook_widget.h"
 #include "performance_dashboard.h"
 #include <QAbstractItemView>
+#include <QAbstractTableModel>
 #include <QApplication>
 #include <QColor>
 #include <QFileDialog>
@@ -37,30 +38,83 @@ constexpr int kBottomBarHeight = 60;
 constexpr int kPageMargin = 24;
 constexpr int kTableRowHeight = 44;
 
+// ── Report field helpers ─────────────────────────────────────────────────────
+
+QString fixedCharToQString(const char *text, std::size_t maxLen) {
+    std::size_t len = 0;
+    while (len < maxLen && text[len] != '\0') {
+        ++len;
+    }
+    return QString::fromLatin1(text, static_cast<int>(len));
+}
+
+QString instrumentName(Instrument instrument) {
+    switch (instrument) {
+    case Instrument::Rose:     return "🌹 Rose";
+    case Instrument::Lavender: return "💜 Lavender";
+    case Instrument::Lotus:    return "🪷 Lotus";
+    case Instrument::Tulip:    return "🌷 Tulip";
+    case Instrument::Orchid:   return "🌸 Orchid";
+    }
+    return "Unknown";
+}
+
+QString sideName(Side side) {
+    switch (side) {
+    case Side::Buy:  return "BUY";
+    case Side::Sell: return "SELL";
+    }
+    return "Unknown";
+}
+
+QString statusName(Status status) {
+    switch (status) {
+    case Status::New:      return "NEW";
+    case Status::Rejected: return "REJECTED";
+    case Status::Fill:     return "FILL";
+    case Status::PFill:    return "PFILL";
+    }
+    return "Unknown";
+}
+
+QString compactTransactTime(const char *text) {
+    const QString raw = fixedCharToQString(text, kTransactTimeLen);
+    if (raw.size() < 18) {
+        return raw;
+    }
+    const int dashIndex = raw.indexOf('-');
+    if (dashIndex < 0 || dashIndex + 7 >= raw.size()) {
+        return raw;
+    }
+    const QString hhmmssFraction = raw.mid(dashIndex + 1);
+    if (hhmmssFraction.size() < 10) {
+        return raw;
+    }
+    return QString("%1:%2:%3%4")
+        .arg(hhmmssFraction.mid(0, 2))
+        .arg(hhmmssFraction.mid(2, 2))
+        .arg(hhmmssFraction.mid(4, 2))
+        .arg(hhmmssFraction.mid(6));
+}
+
+// ── Row / cell colour helpers ────────────────────────────────────────────────
+
 QColor rowBackgroundForStatus(Status status) {
     switch (status) {
-    case Status::New:
-        return QColor("#f7f9fd");
-    case Status::Fill:
-        return QColor("#f5faf7");
-    case Status::PFill:
-        return QColor("#fdf8f4");
-    case Status::Rejected:
-        return QColor("#fdf5f5");
+    case Status::New:      return QColor("#f7f9fd");
+    case Status::Fill:     return QColor("#f5faf7");
+    case Status::PFill:    return QColor("#fdf8f4");
+    case Status::Rejected: return QColor("#fdf5f5");
     }
     return QColor("#ffffff");
 }
 
 QColor rowStatusColor(Status status) {
     switch (status) {
-    case Status::New:
-        return QColor("#5b8fcf");
-    case Status::Fill:
-        return QColor("#2d6b4a");
-    case Status::PFill:
-        return QColor("#c2855a");
-    case Status::Rejected:
-        return QColor("#b84a4a");
+    case Status::New:      return QColor("#5b8fcf");
+    case Status::Fill:     return QColor("#2d6b4a");
+    case Status::PFill:    return QColor("#c2855a");
+    case Status::Rejected: return QColor("#b84a4a");
     }
     return QColor("#52443c");
 }
@@ -72,6 +126,103 @@ QColor sideBackground(Side side) {
 QColor sideForeground(Side side) {
     return side == Side::Buy ? QColor("#2d6b4a") : QColor("#9e3a3a");
 }
+
+// ── Virtual model for the execution-reports table ────────────────────────────
+// Stores only pointers — zero per-cell allocations. Only visible rows are
+// queried by the view, so memory and CPU scale with viewport height, not data size.
+
+class ExecutionReportTableModel : public QAbstractTableModel {
+  public:
+    static constexpr int kColCount = 7;
+
+    explicit ExecutionReportTableModel(QObject *parent = nullptr)
+        : QAbstractTableModel(parent) {}
+
+    void setReports(std::vector<const ExecutionReport *> rows) {
+        beginResetModel();
+        rows_ = std::move(rows);
+        endResetModel();
+    }
+
+    int rowCount(const QModelIndex &parent = {}) const override {
+        return parent.isValid() ? 0 : static_cast<int>(rows_.size());
+    }
+
+    int columnCount(const QModelIndex &parent = {}) const override {
+        return parent.isValid() ? 0 : kColCount;
+    }
+
+    QVariant headerData(int section, Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const override {
+        if (orientation != Qt::Horizontal || role != Qt::DisplayRole || section < 0 ||
+            section >= kColCount) {
+            return {};
+        }
+        static const std::array<const char *, kColCount> kHeaders = {
+            "Order ID", "Client Order ID", "Instrument", "Side",
+            "Exec Status", "Quantity",      "Price"};
+        return QString(kHeaders[section]);
+    }
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
+        if (!index.isValid() || index.row() >= static_cast<int>(rows_.size())) {
+            return {};
+        }
+        const ExecutionReport &r = *rows_[static_cast<std::size_t>(index.row())];
+        const int col = index.column();
+
+        switch (role) {
+        case Qt::DisplayRole:
+            return displayData(r, col);
+        case Qt::TextAlignmentRole:
+            if (col == 3 || col == 4) {
+                return static_cast<int>(Qt::AlignCenter);
+            }
+            if (col == 5 || col == 6) {
+                return static_cast<int>(Qt::AlignRight | Qt::AlignVCenter);
+            }
+            return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
+        case Qt::BackgroundRole:
+            if (col == 3) {
+                return sideBackground(r.side);
+            }
+            return rowBackgroundForStatus(r.status);
+        case Qt::ForegroundRole:
+            if (col == 3) {
+                return sideForeground(r.side);
+            }
+            if (col == 4) {
+                return rowStatusColor(r.status);
+            }
+            return QColor("#3b312b");
+        case Qt::FontRole:
+            if (col == 4) {
+                QFont f;
+                f.setWeight(QFont::DemiBold);
+                return f;
+            }
+            return {};
+        default:
+            return {};
+        }
+    }
+
+  private:
+    static QVariant displayData(const ExecutionReport &r, int col) {
+        switch (col) {
+        case 0: return fixedCharToQString(r.orderId, kOrderIdLen);
+        case 1: return fixedCharToQString(r.clientOrderId, kClientOrderIdLen);
+        case 2: return instrumentName(r.instrument);
+        case 3: return sideName(r.side);
+        case 4: return statusName(r.status);
+        case 5: return QLocale().toString(r.quantity);
+        case 6: return QLocale().toString(r.price, 'f', 2);
+        default: return {};
+        }
+    }
+
+    std::vector<const ExecutionReport *> rows_;
+};
 
 void buildSyntheticBookFromReports(const std::vector<ExecutionReport> &reports,
                                    Instrument instrument, std::vector<BookEntry> &buys,
@@ -189,14 +340,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui_(new Ui::MainW
     ui_->sideFilter->addItem("Buy", static_cast<int>(Side::Buy));
     ui_->sideFilter->addItem("Sell", static_cast<int>(Side::Sell));
 
-    // Configure executionReportsTable
-    ui_->executionReportsTable->setHorizontalHeaderLabels(
-        {"Order ID", "Client Order ID", "Instrument", "Side", "Exec Status", "Quantity", "Price"});
+    // Configure executionReportsTable (QTableView + virtual model)
+    auto *model = new ExecutionReportTableModel(this);
+    reportsModel_ = model;
+    ui_->executionReportsTable->setModel(model);
     ui_->executionReportsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui_->executionReportsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui_->executionReportsTable->setSelectionMode(QAbstractItemView::SingleSelection);
     ui_->executionReportsTable->setShowGrid(false);
-    ui_->executionReportsTable->setAlternatingRowColors(false);
     ui_->executionReportsTable->setWordWrap(false);
     ui_->executionReportsTable->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     ui_->executionReportsTable->verticalHeader()->setVisible(false);
@@ -495,7 +646,7 @@ QComboBox QAbstractItemView {
     border: 1px solid #ead8ce;
     border-radius: 10px;
 }
-QTableWidget {
+QTableView {
     border: none;
     background-color: transparent;
     gridline-color: #f0e8e2;
@@ -503,11 +654,11 @@ QTableWidget {
     color: #3b312b;
     font-family: 'DM Sans', 'Segoe UI', sans-serif;
 }
-QTableWidget::item {
+QTableView::item {
     padding: 4px 12px;
     border-bottom: 1px solid #f0e8e2;
 }
-QTableWidget::item:selected {
+QTableView::item:selected {
     background-color: #fdf4ee;
     color: #1e1b19;
 }
@@ -686,8 +837,7 @@ void MainWindow::refreshUiState() {
         QString("Reports Generated: %1").arg(QLocale().toString(totalReports)));
     ui_->lastRunDurationValue->setText(QString("Cycle: %1 ms").arg(lastRunDurationMs_));
 
-    const int shownRows = ui_->executionReportsTable->rowCount();
-    updateSummaryBar(shownRows);
+    updateSummaryBar(reportsModel_->rowCount());
 }
 
 void MainWindow::updateSummaryBar(int filteredCount) {
@@ -745,54 +895,9 @@ void MainWindow::updateExecutionReportsTable() {
         filteredReports.push_back(&report);
     }
 
-    ui_->executionReportsTable->setRowCount(static_cast<int>(filteredReports.size()));
-
-    const QLocale locale;
-    for (int row = 0; row < static_cast<int>(filteredReports.size()); ++row) {
-        const ExecutionReport &report = *filteredReports[static_cast<std::size_t>(row)];
-
-        auto *orderItem = new QTableWidgetItem(fixedCharToQString(report.orderId, kOrderIdLen));
-        auto *clientItem =
-            new QTableWidgetItem(fixedCharToQString(report.clientOrderId, kClientOrderIdLen));
-        auto *instrumentItem = new QTableWidgetItem(instrumentName(report.instrument));
-        auto *sideItem = new QTableWidgetItem(sideName(report.side));
-        auto *statusItem = new QTableWidgetItem(statusName(report.status));
-        auto *qtyItem = new QTableWidgetItem(locale.toString(report.quantity));
-        auto *priceItem = new QTableWidgetItem(locale.toString(report.price, 'f', 2));
-
-        sideItem->setTextAlignment(Qt::AlignCenter);
-        statusItem->setTextAlignment(Qt::AlignCenter);
-        qtyItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        priceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-
-        const QColor rowBg = rowBackgroundForStatus(report.status);
-        const QColor statusColor = rowStatusColor(report.status);
-
-        std::array<QTableWidgetItem *, 7> rowItems = {
-            orderItem, clientItem, instrumentItem, sideItem, statusItem, qtyItem, priceItem};
-
-        for (QTableWidgetItem *item : rowItems) {
-            item->setBackground(rowBg);
-            item->setForeground(QColor("#3b312b"));
-        }
-
-        sideItem->setBackground(sideBackground(report.side));
-        sideItem->setForeground(sideForeground(report.side));
-
-        statusItem->setForeground(statusColor);
-        statusItem->setFont(
-            QFont(statusItem->font().family(), statusItem->font().pointSize(), QFont::DemiBold));
-
-        ui_->executionReportsTable->setItem(row, 0, orderItem);
-        ui_->executionReportsTable->setItem(row, 1, clientItem);
-        ui_->executionReportsTable->setItem(row, 2, instrumentItem);
-        ui_->executionReportsTable->setItem(row, 3, sideItem);
-        ui_->executionReportsTable->setItem(row, 4, statusItem);
-        ui_->executionReportsTable->setItem(row, 5, qtyItem);
-        ui_->executionReportsTable->setItem(row, 6, priceItem);
-    }
-
-    updateSummaryBar(static_cast<int>(filteredReports.size()));
+    const int filteredCount = static_cast<int>(filteredReports.size());
+    static_cast<ExecutionReportTableModel *>(reportsModel_)->setReports(std::move(filteredReports));
+    updateSummaryBar(filteredCount);
 }
 
 void MainWindow::updateOrderBookTab() {
@@ -937,76 +1042,3 @@ Instrument MainWindow::selectedInstrument() const {
     return Instrument::Rose;
 }
 
-QString MainWindow::instrumentName(Instrument instrument) {
-    switch (instrument) {
-    case Instrument::Rose:
-        return "🌹 Rose";
-    case Instrument::Lavender:
-        return "💜 Lavender";
-    case Instrument::Lotus:
-        return "🪷 Lotus";
-    case Instrument::Tulip:
-        return "🌷 Tulip";
-    case Instrument::Orchid:
-        return "🌸 Orchid";
-    }
-
-    return "Unknown";
-}
-
-QString MainWindow::sideName(Side side) {
-    switch (side) {
-    case Side::Buy:
-        return "BUY";
-    case Side::Sell:
-        return "SELL";
-    }
-
-    return "Unknown";
-}
-
-QString MainWindow::statusName(Status status) {
-    switch (status) {
-    case Status::New:
-        return "NEW";
-    case Status::Rejected:
-        return "REJECTED";
-    case Status::Fill:
-        return "FILL";
-    case Status::PFill:
-        return "PFILL";
-    }
-
-    return "Unknown";
-}
-
-QString MainWindow::compactTransactTime(const char *text) {
-    const QString raw = fixedCharToQString(text, kTransactTimeLen);
-    if (raw.size() < 18) {
-        return raw;
-    }
-
-    const int dashIndex = raw.indexOf('-');
-    if (dashIndex < 0 || dashIndex + 7 >= raw.size()) {
-        return raw;
-    }
-
-    const QString hhmmssFraction = raw.mid(dashIndex + 1);
-    if (hhmmssFraction.size() < 10) {
-        return raw;
-    }
-
-    return QString("%1:%2:%3%4")
-        .arg(hhmmssFraction.mid(0, 2))
-        .arg(hhmmssFraction.mid(2, 2))
-        .arg(hhmmssFraction.mid(4, 2))
-        .arg(hhmmssFraction.mid(6));
-}
-
-QString MainWindow::fixedCharToQString(const char *text, std::size_t maxLen) {
-    std::size_t len = 0;
-    while (len < maxLen && text[len] != '\0') {
-        ++len;
-    }
-    return QString::fromLatin1(text, static_cast<int>(len));
-}
