@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(lillyledger ${SOURCES})
@@ -24,6 +24,7 @@ set(GUI_SOURCES
     gui/orderbook_widget.cpp
     gui/exec_reports_widget.cpp
     gui/order_entry_widget.cpp
+    gui/performance_dashboard.cpp
     ${BACKEND_SOURCES}
 )
 
@@ -32,7 +33,7 @@ target_include_directories(lillyledger-gui PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/gui
 )
-target_link_libraries(lillyledger-gui PRIVATE Qt6::Widgets)
+target_link_libraries(lillyledger-gui PRIVATE Qt6::Widgets Qt6::Charts)
 
 target_compile_options(lillyledger PRIVATE
     -Wall -Wextra -Wpedantic
