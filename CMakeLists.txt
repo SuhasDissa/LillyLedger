@@ -20,6 +20,7 @@ list(FILTER BACKEND_SOURCES EXCLUDE REGEX ".*/main\\.cpp$")
 set(GUI_SOURCES
     gui/main.cpp
     gui/mainwindow.cpp
+    gui/import_export_panel.cpp
     ${BACKEND_SOURCES}
 )
 

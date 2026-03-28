@@ -1,0 +1,476 @@
+#include "import_export_panel.h"
+
+#include "engine/executionhandler.h"
+#include "engine/orderrouter.h"
+#include "io/csvreader.h"
+#include "io/csvwriter.h"
+#include <QDir>
+#include <QElapsedTimer>
+#include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QFont>
+#include <QFontDatabase>
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QLabel>
+#include <QLineEdit>
+#include <QLocale>
+#include <QMetaObject>
+#include <QPlainTextEdit>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QScrollBar>
+#include <QSizePolicy>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QTextStream>
+#include <QThread>
+#include <QTime>
+#include <QVBoxLayout>
+#include <QtGlobal>
+#include <vector>
+
+EngineWorker::EngineWorker(QString inputFilePath, QString outputFilePath, QObject *parent)
+    : QObject(parent), inputFilePath_(std::move(inputFilePath)),
+      outputFilePath_(std::move(outputFilePath)) {}
+
+void EngineWorker::run() {
+    emit progress(0);
+
+    QElapsedTimer totalTimer;
+    totalTimer.start();
+
+    QElapsedTimer phaseTimer;
+    phaseTimer.start();
+
+    CSVReader reader(inputFilePath_.toStdString());
+    const std::vector<ParseResult> parseResults = reader.readAll();
+    const double parseMs = static_cast<double>(phaseTimer.nsecsElapsed()) / 1000000.0;
+
+    if (isCancelled()) {
+        emit error(timestamped("Run cancelled"));
+        return;
+    }
+
+    emit progress(33);
+    emit logLine(timestamped(QString("Parsed %1 orders")
+                                 .arg(QLocale().toString(static_cast<qlonglong>(parseResults.size())))));
+
+    phaseTimer.restart();
+
+    OrderRouter router;
+    std::vector<ExecutionReport> allReports;
+    allReports.reserve(parseResults.size() * 2);
+
+    for (const ParseResult &result : parseResults) {
+        if (isCancelled()) {
+            emit error(timestamped("Run cancelled"));
+            return;
+        }
+
+        if (!result.ok) {
+            allReports.push_back(
+                ExecutionHandler::buildRejectedReport(result.order.clientOrderId, result.reason));
+            continue;
+        }
+
+        auto reports = router.route(result.order);
+        allReports.insert(allReports.end(), reports.begin(), reports.end());
+    }
+
+    const double matchMs = static_cast<double>(phaseTimer.nsecsElapsed()) / 1000000.0;
+
+    emit progress(66);
+    emit logLine(
+        timestamped(QString("Matching complete — %1 reports generated")
+                        .arg(QLocale().toString(static_cast<qlonglong>(allReports.size())))));
+
+    if (isCancelled()) {
+        emit error(timestamped("Run cancelled"));
+        return;
+    }
+
+    phaseTimer.restart();
+    CSVWriter writer(outputFilePath_.toStdString());
+    writer.write(allReports);
+    const double writeMs = static_cast<double>(phaseTimer.nsecsElapsed()) / 1000000.0;
+
+    emit progress(100);
+    emit logLine(timestamped(QString("Written to %1").arg(outputFilePath_)));
+
+    const double totalMs = static_cast<double>(totalTimer.nsecsElapsed()) / 1000000.0;
+    emit logLine(timestamped(QString("Parse: %1ms | Match: %2ms | Write: %3ms | Total: %4ms")
+                                 .arg(parseMs, 0, 'f', 1)
+                                 .arg(matchMs, 0, 'f', 1)
+                                 .arg(writeMs, 0, 'f', 1)
+                                 .arg(totalMs, 0, 'f', 1)));
+
+    QVector<ExecutionReport> reports;
+    reports.reserve(static_cast<qsizetype>(allReports.size()));
+    for (const ExecutionReport &report : allReports) {
+        reports.push_back(report);
+    }
+
+    emit finished(reports);
+}
+
+void EngineWorker::requestCancel() { cancelRequested_.store(true, std::memory_order_relaxed); }
+
+bool EngineWorker::isCancelled() const {
+    return cancelRequested_.load(std::memory_order_relaxed);
+}
+
+QString EngineWorker::timestamped(const QString &message) {
+    return QString("[%1] %2").arg(QTime::currentTime().toString("HH:mm:ss")).arg(message);
+}
+
+ImportExportPanel::ImportExportPanel(QWidget *parent) : QWidget(parent) {
+    qRegisterMetaType<ExecutionReport>("ExecutionReport");
+    qRegisterMetaType<QVector<ExecutionReport>>("QVector<ExecutionReport>");
+
+    setupUi();
+    setRunningState(false);
+}
+
+ImportExportPanel::~ImportExportPanel() {
+    if (worker_ != nullptr) {
+        QMetaObject::invokeMethod(worker_, &EngineWorker::requestCancel, Qt::QueuedConnection);
+    }
+
+    if (workerThread_ != nullptr) {
+        workerThread_->quit();
+        workerThread_->wait();
+    }
+}
+
+void ImportExportPanel::onBrowseInputClicked() {
+    const QString filePath =
+        QFileDialog::getOpenFileName(this, "Select Input CSV", {}, "CSV Files (*.csv)");
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    inputPathEdit_->setText(filePath);
+    loadInputPreview(filePath);
+
+    if (outputPathEdit_->text().isEmpty() || outputPathEdit_->text() == autoGeneratedOutputPath_) {
+        autoGeneratedOutputPath_ = autoOutputPathForInput(filePath);
+        outputPathEdit_->setText(autoGeneratedOutputPath_);
+    }
+
+    if (!runInProgress_) {
+        runButton_->setEnabled(true);
+    }
+
+    appendLogLine(timestamped(QString("Input selected: %1").arg(filePath)));
+}
+
+void ImportExportPanel::onBrowseOutputClicked() {
+    const QString initialPath = outputPathEdit_->text();
+    const QString filePath =
+        QFileDialog::getSaveFileName(this, "Select Output CSV", initialPath, "CSV Files (*.csv)");
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    outputPathEdit_->setText(filePath);
+    autoGeneratedOutputPath_.clear();
+    appendLogLine(timestamped(QString("Output selected: %1").arg(filePath)));
+}
+
+void ImportExportPanel::onRunButtonClicked() {
+    if (runInProgress_) {
+        if (worker_ != nullptr) {
+            QMetaObject::invokeMethod(worker_, &EngineWorker::requestCancel, Qt::QueuedConnection);
+            appendLogLine(timestamped("Cancellation requested"));
+        }
+        return;
+    }
+
+    startWorker();
+}
+
+void ImportExportPanel::onClearLogClicked() { logView_->clear(); }
+
+void ImportExportPanel::onWorkerProgress(int percent) { progressBar_->setValue(percent); }
+
+void ImportExportPanel::onWorkerLogLine(const QString &line) { appendLogLine(line); }
+
+void ImportExportPanel::onWorkerFinished(QVector<ExecutionReport> reports) {
+    emit resultsReady(reports);
+}
+
+void ImportExportPanel::onWorkerError(QString message) { appendLogLine(message); }
+
+void ImportExportPanel::onWorkerThreadFinished() {
+    if (workerThread_ != nullptr) {
+        workerThread_->deleteLater();
+        workerThread_ = nullptr;
+    }
+
+    worker_ = nullptr;
+    setRunningState(false);
+}
+
+void ImportExportPanel::setupUi() {
+    auto *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(12);
+    mainLayout->addWidget(buildInputGroup());
+    mainLayout->addWidget(buildOutputGroup());
+    mainLayout->addWidget(buildRunGroup());
+    mainLayout->addStretch();
+}
+
+QGroupBox *ImportExportPanel::buildInputGroup() {
+    auto *group = new QGroupBox("Input File", this);
+    auto *layout = new QVBoxLayout(group);
+
+    auto *pathLayout = new QHBoxLayout();
+    inputPathEdit_ = new QLineEdit(group);
+    inputPathEdit_->setReadOnly(true);
+    inputPathEdit_->setPlaceholderText("No file selected");
+    inputBrowseButton_ = new QPushButton("Browse…", group);
+    pathLayout->addWidget(inputPathEdit_);
+    pathLayout->addWidget(inputBrowseButton_);
+    layout->addLayout(pathLayout);
+
+    previewTable_ = new QTableWidget(group);
+    previewTable_->setColumnCount(5);
+    previewTable_->setHorizontalHeaderLabels(
+        {"Client Order ID", "Instrument", "Side", "Qty", "Price"});
+    previewTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    previewTable_->setSelectionMode(QAbstractItemView::NoSelection);
+    previewTable_->verticalHeader()->setVisible(false);
+    previewTable_->horizontalHeader()->setStretchLastSection(true);
+    layout->addWidget(previewTable_);
+
+    rowCountLabel_ = new QLabel("0 rows detected", group);
+    layout->addWidget(rowCountLabel_);
+
+    connect(inputBrowseButton_, &QPushButton::clicked, this,
+            &ImportExportPanel::onBrowseInputClicked);
+    return group;
+}
+
+QGroupBox *ImportExportPanel::buildOutputGroup() {
+    auto *group = new QGroupBox("Output File", this);
+    auto *layout = new QVBoxLayout(group);
+
+    auto *pathLayout = new QHBoxLayout();
+    outputPathEdit_ = new QLineEdit(group);
+    outputPathEdit_->setReadOnly(true);
+    outputPathEdit_->setPlaceholderText("Auto-generated alongside input");
+    outputBrowseButton_ = new QPushButton("Browse…", group);
+    pathLayout->addWidget(outputPathEdit_);
+    pathLayout->addWidget(outputBrowseButton_);
+    layout->addLayout(pathLayout);
+
+    connect(outputBrowseButton_, &QPushButton::clicked, this,
+            &ImportExportPanel::onBrowseOutputClicked);
+    return group;
+}
+
+QGroupBox *ImportExportPanel::buildRunGroup() {
+    auto *group = new QGroupBox("Run Engine", this);
+    auto *layout = new QVBoxLayout(group);
+
+    progressBar_ = new QProgressBar(group);
+    progressBar_->setRange(0, 100);
+    progressBar_->setValue(0);
+    progressBar_->setVisible(false);
+    layout->addWidget(progressBar_);
+
+    runButton_ = new QPushButton("▶ Run Matching Engine", group);
+    runButton_->setEnabled(false);
+    runButton_->setMinimumHeight(48);
+    runButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    runButton_->setStyleSheet(
+        "QPushButton {"
+        " background-color: #89b4fa;"
+        " color: #1e1e2e;"
+        " border: 1px solid #74a6f7;"
+        " border-radius: 8px;"
+        " font-weight: 600;"
+        "}"
+        "QPushButton:disabled {"
+        " background-color: #5c5f77;"
+        " color: #a6adc8;"
+        "}");
+    layout->addWidget(runButton_);
+
+    logView_ = new QPlainTextEdit(group);
+    logView_->setReadOnly(true);
+    logView_->setFixedHeight(150);
+    const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    logView_->setFont(monoFont);
+    logView_->setStyleSheet(
+        "QPlainTextEdit { background-color: #1e1e2e; color: #cdd6f4; border: 1px solid #45475a; }");
+    layout->addWidget(logView_);
+
+    clearLogButton_ = new QPushButton("Clear Log", group);
+    layout->addWidget(clearLogButton_);
+
+    connect(runButton_, &QPushButton::clicked, this, &ImportExportPanel::onRunButtonClicked);
+    connect(clearLogButton_, &QPushButton::clicked, this, &ImportExportPanel::onClearLogClicked);
+
+    return group;
+}
+
+void ImportExportPanel::loadInputPreview(const QString &filePath) {
+    previewTable_->clearContents();
+    previewTable_->setRowCount(0);
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        rowCountLabel_->setText("0 rows detected");
+        appendLogLine(timestamped(QString("Failed to open input file for preview: %1").arg(filePath)));
+        return;
+    }
+
+    QTextStream stream(&file);
+    qsizetype totalRows = 0;
+    bool firstNonEmptySeen = false;
+    QVector<QStringList> previewRows;
+    previewRows.reserve(10);
+
+    while (!stream.atEnd()) {
+        const QString rawLine = stream.readLine();
+        if (rawLine.trimmed().isEmpty()) {
+            continue;
+        }
+
+        const QStringList tokens = splitCommaSeparated(rawLine);
+        if (!firstNonEmptySeen) {
+            firstNonEmptySeen = true;
+            if (isHeaderRow(tokens)) {
+                continue;
+            }
+        }
+
+        ++totalRows;
+        if (previewRows.size() < 10) {
+            QStringList row = tokens;
+            while (row.size() < 5) {
+                row.push_back("");
+            }
+            if (row.size() > 5) {
+                row = row.mid(0, 5);
+            }
+            previewRows.push_back(row);
+        }
+    }
+
+    previewTable_->setRowCount(previewRows.size());
+    for (int row = 0; row < previewRows.size(); ++row) {
+        const QStringList &fields = previewRows.at(row);
+        for (int col = 0; col < 5; ++col) {
+            auto *item = new QTableWidgetItem(fields.at(col));
+            previewTable_->setItem(row, col, item);
+        }
+    }
+
+    rowCountLabel_->setText(
+        QString("%1 rows detected").arg(QLocale().toString(static_cast<qlonglong>(totalRows))));
+}
+
+void ImportExportPanel::appendLogLine(const QString &line) {
+    logView_->appendPlainText(line);
+    auto *scrollBar = logView_->verticalScrollBar();
+    scrollBar->setValue(scrollBar->maximum());
+}
+
+void ImportExportPanel::setRunningState(bool running) {
+    runInProgress_ = running;
+
+    if (running) {
+        progressBar_->setVisible(true);
+        progressBar_->setValue(0);
+        runButton_->setText("⏹ Cancel");
+        runButton_->setEnabled(true);
+        inputBrowseButton_->setEnabled(false);
+        outputBrowseButton_->setEnabled(false);
+        return;
+    }
+
+    progressBar_->setVisible(false);
+    runButton_->setText("▶ Run Matching Engine");
+    runButton_->setEnabled(!inputPathEdit_->text().trimmed().isEmpty());
+    inputBrowseButton_->setEnabled(true);
+    outputBrowseButton_->setEnabled(true);
+}
+
+void ImportExportPanel::startWorker() {
+    const QString inputPath = inputPathEdit_->text().trimmed();
+    if (inputPath.isEmpty()) {
+        return;
+    }
+
+    const QString outputPath = ensureOutputPath();
+
+    if (workerThread_ != nullptr) {
+        return;
+    }
+
+    workerThread_ = new QThread(this);
+    worker_ = new EngineWorker(inputPath, outputPath);
+    worker_->moveToThread(workerThread_);
+
+    connect(workerThread_, &QThread::started, worker_, &EngineWorker::run);
+    connect(worker_, &EngineWorker::progress, this, &ImportExportPanel::onWorkerProgress);
+    connect(worker_, &EngineWorker::logLine, this, &ImportExportPanel::onWorkerLogLine);
+    connect(worker_, &EngineWorker::finished, this, &ImportExportPanel::onWorkerFinished);
+    connect(worker_, &EngineWorker::error, this, &ImportExportPanel::onWorkerError);
+
+    connect(worker_, &EngineWorker::finished, workerThread_, &QThread::quit);
+    connect(worker_, &EngineWorker::error, workerThread_, &QThread::quit);
+    connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
+    connect(workerThread_, &QThread::finished, this, &ImportExportPanel::onWorkerThreadFinished);
+
+    appendLogLine(timestamped("Engine run started"));
+    setRunningState(true);
+    workerThread_->start();
+}
+
+QString ImportExportPanel::ensureOutputPath() {
+    const QString existing = outputPathEdit_->text().trimmed();
+    if (!existing.isEmpty()) {
+        return existing;
+    }
+
+    const QString generated = autoOutputPathForInput(inputPathEdit_->text().trimmed());
+    autoGeneratedOutputPath_ = generated;
+    outputPathEdit_->setText(generated);
+    return generated;
+}
+
+QString ImportExportPanel::autoOutputPathForInput(const QString &inputFilePath) {
+    const QFileInfo inputInfo(inputFilePath);
+    const QString baseName = inputInfo.completeBaseName().isEmpty() ? "orders"
+                                                                     : inputInfo.completeBaseName();
+    return QDir(inputInfo.absolutePath()).filePath(baseName + "_out.csv");
+}
+
+QString ImportExportPanel::timestamped(const QString &message) {
+    return QString("[%1] %2").arg(QTime::currentTime().toString("HH:mm:ss")).arg(message);
+}
+
+QStringList ImportExportPanel::splitCommaSeparated(const QString &line) {
+    QStringList tokens = line.split(',', Qt::KeepEmptyParts);
+    for (QString &token : tokens) {
+        token = token.trimmed();
+    }
+    return tokens;
+}
+
+bool ImportExportPanel::isHeaderRow(const QStringList &tokens) {
+    if (tokens.size() != 5) {
+        return false;
+    }
+
+    return tokens[0] == "Client Order ID" && tokens[1] == "Instrument" && tokens[2] == "Side" &&
+           tokens[3] == "Quantity" && tokens[4] == "Price";
+}
