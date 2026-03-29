@@ -338,8 +338,7 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
             return;
         }
         instrumentFilter_ = instrument;
-        beginFilterChange();
-        endFilterChange(Direction::Rows);
+        refreshRowsFilter();
     }
 
     void setStatusFilter(int status) {
@@ -347,8 +346,7 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
             return;
         }
         statusFilter_ = status;
-        beginFilterChange();
-        endFilterChange(Direction::Rows);
+        refreshRowsFilter();
     }
 
     void setSideFilter(int side) {
@@ -356,8 +354,7 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
             return;
         }
         sideFilter_ = side;
-        beginFilterChange();
-        endFilterChange(Direction::Rows);
+        refreshRowsFilter();
     }
 
     void setClientOrderIdSearch(const QString &text) {
@@ -366,8 +363,7 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
             return;
         }
         clientOrderSearch_ = normalized;
-        beginFilterChange();
-        endFilterChange(Direction::Rows);
+        refreshRowsFilter();
     }
 
   protected:
@@ -442,6 +438,15 @@ class ExecutionReportsFilterProxyModel : public QSortFilterProxyModel {
     }
 
   private:
+    void refreshRowsFilter() {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+        beginFilterChange();
+        endFilterChange(Direction::Rows);
+#else
+        invalidateFilter();
+#endif
+    }
+
     int instrumentFilter_{kAnyFilterValue};
     int statusFilter_{kAnyFilterValue};
     int sideFilter_{kAnyFilterValue};
