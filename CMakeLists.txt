@@ -45,16 +45,21 @@ target_include_directories(lillyledger-gui PRIVATE
 )
 target_link_libraries(lillyledger-gui PRIVATE Qt6::Widgets Qt6::Charts)
 
-target_compile_options(lillyledger PRIVATE
-    -Wall -Wextra -Wpedantic
-    $<$<CONFIG:Release>:-O2>
-    $<$<CONFIG:Debug>:-g -O0>
-)
-target_compile_options(lillyledger-gui PRIVATE
-    -Wall -Wextra -Wpedantic
-    $<$<CONFIG:Release>:-O2>
-    $<$<CONFIG:Debug>:-g -O0>
-)
+if(MSVC)
+    target_compile_options(lillyledger PRIVATE /W4)
+    target_compile_options(lillyledger-gui PRIVATE /W4)
+else()
+    target_compile_options(lillyledger PRIVATE
+        -Wall -Wextra -Wpedantic
+        $<$<CONFIG:Release>:-O2>
+        $<$<CONFIG:Debug>:-g -O0>
+    )
+    target_compile_options(lillyledger-gui PRIVATE
+        -Wall -Wextra -Wpedantic
+        $<$<CONFIG:Release>:-O2>
+        $<$<CONFIG:Debug>:-g -O0>
+    )
+endif()
 
 install(TARGETS lillyledger-gui
     RUNTIME DESTINATION bin
