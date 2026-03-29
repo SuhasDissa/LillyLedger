@@ -26,6 +26,9 @@ jobs:
             desktop-file-utils \
             file \
             fuse \
+            libegl1-mesa-dev \
+            libgl1-mesa-dev \
+            libopengl-dev \
             libqt6charts6-dev \
             patchelf \
             qt6-base-dev \
