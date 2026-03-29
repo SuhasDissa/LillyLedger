@@ -56,6 +56,14 @@ target_compile_options(lillyledger-gui PRIVATE
     $<$<CONFIG:Debug>:-g -O0>
 )
 
+install(TARGETS lillyledger-gui
+    RUNTIME DESTINATION bin
+)
+
+install(TARGETS lillyledger
+    RUNTIME DESTINATION bin
+)
+
 find_program(CLANG_FORMAT clang-format)
 if(CLANG_FORMAT)
     file(GLOB_RECURSE FORMAT_SOURCES

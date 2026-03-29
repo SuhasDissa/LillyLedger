@@ -1,0 +1,77 @@
+name: Build AppImage
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            desktop-file-utils \
+            file \
+            fuse \
+            libqt6charts6-dev \
+            patchelf \
+            qt6-base-dev \
+            wget
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Install to AppDir
+        run: |
+          cmake --install build --prefix AppDir/usr
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          cp resources/lillyledger.desktop AppDir/usr/share/applications/
+          cp resources/lillyledger.png AppDir/usr/share/icons/hicolor/256x256/apps/
+
+      - name: Download linuxdeploy
+        run: |
+          wget -O linuxdeploy-x86_64.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -O linuxdeploy-plugin-qt-x86_64.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage
+
+      - name: Build AppImage
+        run: |
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export QMAKE=/usr/bin/qmake6
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir AppDir \
+            --desktop-file AppDir/usr/share/applications/lillyledger.desktop \
+            --icon-file resources/lillyledger.png \
+            --plugin qt \
+            --output appimage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LillyLedger-AppImage
+          path: ./*.AppImage
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./*.AppImage
