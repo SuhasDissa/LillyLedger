@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=LillyLedger
+Exec=lillyledger-gui
+Icon=lillyledger
+Categories=Office;Finance;
+Comment=Flower trading desktop application
+Terminal=false
