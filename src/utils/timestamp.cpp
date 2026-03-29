@@ -13,7 +13,11 @@ std::string currentTransactTime() {
 
     std::time_t t = system_clock::to_time_t(now);
     std::tm tm{};
+#ifdef _WIN32
+    gmtime_s(&tm, &t);
+#else
     gmtime_r(&t, &tm);
+#endif
 
     char buf[20];
     std::strftime(buf, 16, "%Y%m%d-%H%M%S", &tm);

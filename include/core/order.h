@@ -1,6 +1,7 @@
 #pragma once
 #include "core/enum/instrument.h"
 #include "core/enum/side.h"
+#include <cstddef>
 #include <cstdint>
 
 inline constexpr std::size_t kClientOrderIdLen = 8;

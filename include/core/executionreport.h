@@ -3,6 +3,7 @@
 #include "core/enum/side.h"
 #include "core/enum/status.h"
 #include "core/order.h"
+#include <cstddef>
 #include <cstdint>
 
 inline constexpr std::size_t kOrderIdLen = 8;
