@@ -1,41 +1,69 @@
 #include "engine/orderbook.h"
 #include "engine/executionhandler.h"
-#include "engine/matchingengine.h"
+#include "engine/matchingengine.h" // for Trade struct
 #include <algorithm>
 #include <cstdio>
 
 OrderBook::OrderBook(Instrument instrument) : instrument_(instrument) {}
 
 void OrderBook::insertBuy(const BookEntry &entry) {
-
-    auto it = std::lower_bound(buys_.begin(), buys_.end(), entry,
-                               [](const BookEntry &a, const BookEntry &b) {
-                                   if (a.order.price != b.order.price)
-                                       return a.order.price > b.order.price;
-                                   return a.seqNum < b.seqNum;
-                               });
-    buys_.insert(it, entry);
+    buys_[entry.order.price].push_back(entry);
 }
 
 void OrderBook::insertSell(const BookEntry &entry) {
+    sells_[entry.order.price].push_back(entry);
+}
 
-    auto it = std::lower_bound(sells_.begin(), sells_.end(), entry,
-                               [](const BookEntry &a, const BookEntry &b) {
-                                   if (a.order.price != b.order.price)
-                                       return a.order.price < b.order.price;
-                                   return a.seqNum < b.seqNum;
-                               });
-    sells_.insert(it, entry);
+template <typename Map>
+static std::vector<Trade> matchAgainst(const Order &aggressor, Map &opposite,
+                                       uint16_t &remainingQty) {
+    std::vector<Trade> trades;
+
+    for (auto levelIt = opposite.begin(); levelIt != opposite.end() && remainingQty > 0;) {
+        const double levelPrice = levelIt->first;
+        const bool crosses = (aggressor.side == Side::Buy) ? (levelPrice <= aggressor.price)
+                                                           : (levelPrice >= aggressor.price);
+        if (!crosses)
+            break;
+
+        auto &queue = levelIt->second;
+        while (!queue.empty() && remainingQty > 0) {
+            BookEntry &passive = queue.front();
+            const uint16_t matchQty = std::min(remainingQty, passive.remainingQty);
+
+            Trade trade;
+            trade.passive = passive; // snapshot before decrement
+            trade.execPrice = levelPrice;
+            trade.execQty = matchQty;
+            trades.push_back(trade);
+
+            remainingQty -= matchQty;
+            passive.remainingQty -= matchQty;
+
+            if (passive.remainingQty == 0)
+                queue.pop_front(); // O(1) front removal
+        }
+
+        if (queue.empty())
+            levelIt = opposite.erase(levelIt);
+        else
+            ++levelIt;
+    }
+
+    return trades;
 }
 
 std::vector<ExecutionReport> OrderBook::addOrder(const Order &order, const char *orderId) {
-    auto &opposite = (order.side == Side::Buy) ? sells_ : buys_;
-
     uint16_t remainingQty = order.quantity;
-
     std::vector<Trade> trades;
-    if (MatchingEngine::isAggressive(order, opposite))
-        trades = MatchingEngine::execute(order, opposite, remainingQty);
+
+    if (order.side == Side::Buy) {
+        if (!sells_.empty() && sells_.begin()->first <= order.price)
+            trades = matchAgainst(order, sells_, remainingQty);
+    } else {
+        if (!buys_.empty() && buys_.begin()->first >= order.price)
+            trades = matchAgainst(order, buys_, remainingQty);
+    }
 
     std::vector<ExecutionReport> reports =
         ExecutionHandler::buildFillReports(order, orderId, trades);

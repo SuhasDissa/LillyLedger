@@ -3,12 +3,12 @@
 #include "core/order.h"
 #include "engine/bookentry.h"
 #include <cstdint>
+#include <deque>
+#include <functional>
+#include <map>
 #include <vector>
 
 // Maintains the resting buy and sell orders for a single instrument.
-// Matching is delegated to MatchingEngine; report construction is delegated
-// to ExecutionHandler.  This class is responsible only for sorted insertion
-// and book-keeping.
 class OrderBook {
   public:
     explicit OrderBook(Instrument instrument);
@@ -18,8 +18,10 @@ class OrderBook {
 
   private:
     Instrument instrument_;
-    std::vector<BookEntry> buys_;  // highest price first, then lowest seqNum
-    std::vector<BookEntry> sells_; // lowest  price first, then lowest seqNum
+    // buys: highest price first
+    std::map<double, std::deque<BookEntry>, std::greater<double>> buys_;
+    // sells: lowest price first
+    std::map<double, std::deque<BookEntry>> sells_;
     uint32_t nextSeqNum_{0};
 
     void insertBuy(const BookEntry &entry);
