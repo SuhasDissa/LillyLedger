@@ -51,7 +51,7 @@ bool CSVReader::isHeaderRow(const std::string &line) {
     if (static_cast<int>(tokens.size()) != kExpectedFieldCount) {
         return false;
     }
-    return tokens[0] == "Client Order ID" && tokens[1] == "Instrument" && tokens[2] == "Side" &&
+    return (tokens[0] == "Client Order ID" || tokens[0] == "Cl. Ord. ID") && tokens[1] == "Instrument" && tokens[2] == "Side" &&
            tokens[3] == "Quantity" && tokens[4] == "Price";
 }
 
